@@ -1,4 +1,5 @@
 from sqlmodel import SQLModel, create_engine, Session, Field
+from app.core.config import get_settings
 
 settings = get_settings()
 
