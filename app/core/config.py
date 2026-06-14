@@ -1,7 +1,7 @@
 from functools import lru_cache
 from typing import Literal
 
-from pydantic import Field, PostgresDsn, field_validator
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
@@ -20,38 +20,43 @@ class Settings(BaseSettings):
     DEBUG: bool = False
 
     # --- Database ---
-    DATABASE_URL: str = Field(default="sqlite:///app.db")
-    # DB_POOL_MIN_SIZE: int = Field(default=2, ge=1, le=100)
-    # DB_POOL_MAX_SIZE: int = Field(default=10, ge=1, le=100)
-    # DB_POOL_TIMEOUT: float = Field(default=30.0)
+    DATABASE_URL: str = ""
+    DB_POOL_MIN_SIZE: int = Field(default=2, ge=1, le=100)
+    DB_POOL_MAX_SIZE: int = Field(default=10, ge=1, le=100)
+    DB_POOL_TIMEOUT: float = 30.0
+
+    # --- Semgrep ---
+    SEMFREP_RULESET: str = "p/python"
 
     # # --- LLM ---
-    # LLM_PROVIDER: str = "groq"
-    # LLM_MODEL: str = "llama3-8b-8192"
-    # LLM_API_KEY: str = Field(min_length=32)
+    LLM_PROVIDER: str = "groq"
+    LLM_MODEL: str = "llama3-8b-8192"
+    LLM_API_KEY: str = ""
 
     # # --- Security ---
-    # JWT_SECRET_KEY: str = Field(min_length=32)
-    # ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(default=60, ge=1)
+    JWT_SECRET_KEY: str = ""
+    JWT_ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
     # # --- Admin 1 ---
-    # INITIAL_ADMIN_EMAIL: str = "admin@example.com"
-    # INITIAL_ADMIN_PASSWORD: str = "ChangeMe_Password@123"
+    INITIAL_ADMIN_EMAIL: str = "admin@example.com"
+    INITIAL_ADMIN_PASSWORD: str = "ChangeMe_Password@123"
 
     # --- Logging ---
     LOG_LEVEL: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
     LOG_DIR: str = "logs"
     LOG_TO_FILE: bool = True
 
-    # @field_validator("DB_POOL_MAX_SIZE")
-    # @classmethod
-    # def max_must_exceed_min(cls, max: int, info) -> int:
-    #     min = info.data.get("DB_POOL_MIN_SIZE")
-    #     if max < min:
-    #         raise ValueError(
-    #             f"DB_POOL_MAX_SIZE ({max}) must be >= DB_POOL_MIN_SIZE"
-    #         )
-    #     return max
+    @field_validator("DB_POOL_MAX_SIZE")
+    @classmethod
+    def max_must_exceed_min(cls, max: int, info) -> int:
+        min = info.data.get("DB_POOL_MIN_SIZE")
+        if max < min:
+            raise ValueError(
+                f"DB_POOL_MAX_SIZE ({max}) must be >= DB_POOL_MIN_SIZE"
+            )
+        return max
     
     @property
     def is_production(self) -> bool:
@@ -74,3 +79,5 @@ When it get rexecuted:
 @lru_cache
 def get_settings() -> Settings:
    return Settings()
+
+settings = get_settings()

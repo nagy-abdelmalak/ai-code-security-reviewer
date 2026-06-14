@@ -1,14 +1,20 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends
 from pydantic import BaseModel
 import tempfile
 import subprocess
-from app.core.config import get_settings
-from app.db.session import get_session
-
-settings = get_settings()
+from app.core.config import settings
+from app.db.session import init_db
 
 class CodeRequest(BaseModel):
     code: str
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    init_db()
+    yield
+
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -17,8 +23,8 @@ app = FastAPI(
     # docs_url="/docs",
     # redoc_url="/redoc",
     # openapi_url="/openapi.json",
-    # lifespan=lifespan,
-    dependencies=[Depends(get_session)],
+    lifespan=lifespan,
+    # dependencies=[Depends(get_session)],
 )
 
 @app.get("/")
@@ -29,8 +35,7 @@ def root():
 def health():
     return {
         "status": "OK",
-        "environment": settings.ENVIRONMENT,
-        # "database": "Connected" if get_session().exec("SELECT 1").fetchone() else "Disconnected"
+        "environment": settings.ENVIRONMENT
     }
 
 # @app.post("/review")

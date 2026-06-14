@@ -1,8 +1,8 @@
 import logging.config
 import Logging
 from datetime import datetime
+from app.core.config import settings
 
-settings = get_settings()
 LOG_DIR = settings.LOG_DIR
 
 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -24,7 +24,7 @@ config_dict = {
             "class": "logging.FileHandler",
             "level": settings.LOG_LEVEL,
             "formatter": "default",
-            "filename": f"{LOG_DIR}/{logger_name}_{timestamp}.log"
+            "filename": f"{LOG_DIR}/app_{timestamp}.log"
         }
     },
     "root": {
