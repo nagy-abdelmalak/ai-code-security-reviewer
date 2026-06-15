@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  
+jobs:
+  test:
+    run-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: ture
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Install denpendencies
+        run: uv sync --frozen
+
+      - name: Lint with ruff
+        run: uv run ruff check app/ tests/
+
+      - name: Run test
+        env: 
+          JWT_SECRET: test-secret
+          INITIAL_ADMIN_EMAIL: admin@test.local
+          INITIAL_ADMIN_PASSWORD: test_password
+          DATABASE_URL: sqlite:///./test.db
+        run: uv run pytest -v 
