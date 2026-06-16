@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from uuid import UUID, uuid4
 
@@ -15,4 +15,4 @@ class User(SQLModel, table=True):
     password_hash: str
     role: Role = Field(default=Role.DEVELOPER)
     is_active: bool = Field(default=True)
-    created_at: datetime = Field(defualt_factory=datetime.utcnow)
+    created_at: datetime = Field(defualt_factory=datetime.now(timezone.utc))
