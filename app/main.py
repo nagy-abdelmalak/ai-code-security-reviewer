@@ -3,12 +3,14 @@ from fastapi import FastAPI, Request
 from pydantic import BaseModel
 import uuid
 import structlog
+from sqlmodel import Session, select
 
+from app.models import Role, User
 from app.core.config import settings
-import app.models
-from app.db.session import init_db
+from app.db.session import init_db, engine
 from app.core.logging import configure_logging, get_logger
 from app.api.routes import auth
+from app.core.security import hash_password
 
 configure_logging()
 logger = get_logger(__name__)
@@ -16,13 +18,32 @@ logger = get_logger(__name__)
 class CodeRequest(BaseModel):
     code: str
 
+def bootstrap_admin() -> None:
+    with Session(engine) as session:
+        existing = session.exec(
+            select(User).where(User.role == Role.ADMIN)
+        ).first()
+        if existing:
+            logger.info("booststrap_skipped", reason="admin_exists", email=existing.email)
+            return
+        
+        admin = User(
+            email=settings.INITIAL_ADMIN_EMAIL,
+            password_hash=hash_password(settings.INITIAL_ADMIN_PASSWORD),
+            role=Role.ADMIN
+        )
+        session.add(admin)
+        session.commit()
+        session.refresh(admin)
+        logger.info("boostrap_admin_created", email=admin.email)
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("Starting up")
     init_db()
     logger.info("Database initialized")
-    # bootstrap_admin()
-    # logger.info("Admin bootstrap complete")
+    bootstrap_admin()
+    logger.info("Admin bootstrap complete")
     yield
     logger.info("Shutting down")
 

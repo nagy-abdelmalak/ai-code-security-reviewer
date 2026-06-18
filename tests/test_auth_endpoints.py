@@ -57,3 +57,41 @@ def test_login_with_unknown_email_returns_401(client):
         json={"email": "ghost@example.com", "password": "anypassword"},
     )
     assert response.status_code == 401
+
+def test_me_without_token_returns_401(client):
+    response = client.get("/auth/me")
+    assert response.status_code == 401
+
+
+def test_me_with_valid_token_returns_user(client):
+    # Register
+    client.post(
+        "/auth/register",
+        json={"email": "eve@example.com", "password": "eve1234567"},
+    )
+    # Login
+    login_resp = client.post(
+        "/auth/login",
+        json={"email": "eve@example.com", "password": "eve1234567"},
+    )
+    token = login_resp.json()["access_token"]
+
+    # Me
+    response = client.get(
+        "/auth/me",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["email"] == "eve@example.com"
+    assert body["role"] == "developer"
+    assert "password" not in body
+    assert "password_hash" not in body
+
+
+def test_me_with_invalid_token_returns_401(client):
+    response = client.get(
+        "/auth/me",
+        headers={"Authorization": "Bearer not.a.real.token"},
+    )
+    assert response.status_code == 401

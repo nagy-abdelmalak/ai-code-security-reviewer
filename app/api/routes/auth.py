@@ -4,6 +4,8 @@ from sqlmodel import Session
 from app.schemas.auth import UserResponse, RegisterRequest, TokenResponse, LoginRequest
 from app.db.session import get_session
 from app.services.auth_service import AuthService, EmailAlreadyRegistered
+from app.api.routes.deps import get_current_user
+from app.models import User
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -37,3 +39,11 @@ def login(req: LoginRequest, session: Session = Depends(get_session)):
             detail="Invalid email or password"
         )
     return service.issue_tokens(user)
+
+@router.get("/me", response_model=UserResponse)
+def get_me(user: User = Depends(get_current_user)):
+    return UserResponse(
+        id=str(user.id),
+        email=user.email,
+        role=user.role.value
+    )
