@@ -10,7 +10,7 @@ dependencies = [
     "httpx2>=2.4.0",
     "passlib>=1.7.4",
     "psycopg2-binary>=2.9.12",
-    "pydantic==2.13.3",
+    "pydantic[email]==2.13.3",
     "pydantic-settings>=2.14.1",
     "pyjwt>=2.13.0",
     "pytest>=9.1.0",

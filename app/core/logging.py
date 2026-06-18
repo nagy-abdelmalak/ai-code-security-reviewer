@@ -31,7 +31,7 @@ def configure_logging() -> None:
     else:
         renderer = structlog.dev.ConsoleRenderer(
             colors=True,
-            pad_event=0
+            pad_event_to=0
         )
 
     # Configure structlog itself

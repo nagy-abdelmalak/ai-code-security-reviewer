@@ -54,6 +54,7 @@ class AuthService:
         
         if not verify_password(password, user.password_hash):
             logger.warning("login_failed", email=email, reason="bad_password", user_id=str(user.id))
+            return None
         
         logger.info("login_success", user_id=str(user.id), email=email, role=user.role)
         return user

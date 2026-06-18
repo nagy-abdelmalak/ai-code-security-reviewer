@@ -1,18 +1,21 @@
 import jwt
-from passlib.context import CryptContext
+from argon2 import PasswordHasher
+from argon2.exceptions import VerifyMismatchError
 from datetime import datetime, timedelta, timezone
 
 from app.core.config import settings
 
 # Password hasing
-_pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
+_ph = PasswordHasher()
 
 def hash_password(plain_password: str) -> str:
-    return _pwd_context.hash(plain_password)
+    return _ph.hash(plain_password)
 
 def verify_password(plain_password: str, hashed: str) -> bool:
-    return _pwd_context.verify(plain_password, hashed)
-
+    try:
+        return _ph.verify(hashed, plain_password)
+    except VerifyMismatchError:
+        return False
 
 # JWT
 def _create_token(payload: dict, ttl: timedelta) -> str:
