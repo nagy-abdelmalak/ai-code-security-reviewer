@@ -45,8 +45,8 @@ class Settings(BaseSettings):
 
     # --- Logging ---
     LOG_LEVEL: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
-    LOG_DIR: str = "logs"
-    LOG_TO_FILE: bool = True
+    LOG_DIR: str = "./logs"
+    LOG_TO_FILE: bool = False
 
     @field_validator("DB_POOL_MAX_SIZE")
     @classmethod

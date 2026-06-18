@@ -17,12 +17,8 @@ services:
     
   app:
     build: .
-    environment:
-      DATABASE_URL: ${DATABASE_URL}
-      JWT_SECRET: ${JWT_SECRET}
-      INITIAL_ADMIN_EMAIL: ${INITIAL_ADMIN_EMAIL}
-      INITIAL_ADMIN_PASSWORD: ${INITIAL_ADMIN_PASSWORD}
-      ENVIRONMENT: development
+    env_file:
+      - .env
     ports:
       - "8000:8000"
     depends_on:
