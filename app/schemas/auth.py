@@ -10,7 +10,7 @@ class LoginRequest(BaseModel):
     email: EmailStr
     password: str
 
-class TokenRequest(BaseModel):
+class TokenResponse(BaseModel):
     """Response containing the JWT access + refresh tokens."""
     access_token: str
     refresh_token: str
@@ -19,3 +19,9 @@ class TokenRequest(BaseModel):
 class RefreshRequest(BaseModel):
     """Payload for POST /auth/refresh."""
     refresh_token: str
+
+class UserResponse(BaseModel):
+    """Public representation of a user (no password_hash, no is_active)."""
+    id: str
+    email: EmailStr
+    role: str
