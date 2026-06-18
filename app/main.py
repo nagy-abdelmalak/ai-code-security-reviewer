@@ -8,6 +8,7 @@ from app.core.config import settings
 import app.models
 from app.db.session import init_db
 from app.core.logging import configure_logging, get_logger
+from app.api.routes import auth
 
 configure_logging()
 logger = get_logger(__name__)
@@ -35,6 +36,8 @@ app = FastAPI(
     lifespan=lifespan,
     # dependencies=[Depends(get_session)],
 )
+
+app.include_router(auth.router)
 
 @app.middleware("http")
 async def add_request_id(request: Request, call_next):
