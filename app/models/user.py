@@ -2,7 +2,8 @@ from datetime import datetime, timezone
 from enum import Enum
 from uuid import UUID, uuid4
 
-from sqlmodel import Field, SQLModel, Column
+from sqlalchemy import Column, DateTime
+from sqlmodel import Field, SQLModel
 
 class Role(str, Enum):
     DEVELOPER = "developer"

@@ -20,20 +20,25 @@ def configure_logging() -> None:
     shared_processors: list[Any] = [
         structlog.contextvars.merge_contextvars,   # adds bound context (request_id, etc.)
         structlog.processors.add_log_level,
-        structlog.processors.TimeStamper(fmt="iso", utc=True),
+        structlog.processors.TimeStamper(fmt="%Y-%m-%d %H:%M:%S", utc=True),
         structlog.processors.StackInfoRenderer(),
         structlog.processors.format_exc_info,
     ]
 
     # Choose the final renderer based on environment
-    if settings.ENVIRONMENT == "development":
-        renderer: Any = structlog.dev.ConsoleRenderer(colors=True)
+    if settings.is_production:
+        renderer: Any = structlog.processors.JSONRenderer()
     else:
-        renderer = structlog.processors.JSONRenderer()
+        renderer = structlog.dev.ConsoleRenderer(
+            colors=True,
+            pad_event=0
+        )
 
     # Configure structlog itself
     structlog.configure(
-        processors=shared_processors + [renderer],
+        processors=shared_processors + [
+            structlog.stdlib.ProcessorFormatter.wrap_for_formatter,
+        ],
         wrapper_class=structlog.make_filtering_bound_logger(
             getattr(logging, settings.LOG_LEVEL.upper())
         ),
@@ -62,8 +67,9 @@ def configure_logging() -> None:
 
     # Tune noisy third-party loggers
     logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
+    logging.getLogger("sqlalchemy").setLevel(logging.WARNING)
     logging.getLogger("sqlalchemy.engine").setLevel(logging.WARNING)
-
+    logging.getLogger("sqlalchemy.pool").setLevel(logging.WARNING)
 
 def get_logger(name: str | None = None) -> structlog.stdlib.BoundLogger:
     """Convenience function — use this in every module instead of importing structlog directly."""
