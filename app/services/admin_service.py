@@ -13,7 +13,7 @@ class InvalidRole(Exception):
 class UserNotFound(Exception):
     pass
 
-class UserService:
+class AdminService:
     def __init__(self, session: Session):
         self.session = session
         self.audit = AuditService(session)
@@ -35,7 +35,7 @@ class UserService:
             raise UserNotFound(str(target_user_id))
         
         old_role = target.role
-        target_role = new_role
+        target.role = new_role
 
         self.audit.log(
             admin.id, 

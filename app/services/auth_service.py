@@ -1,4 +1,5 @@
 from sqlmodel import Session, select
+from uuid import UUID
 
 from app.models.user import Role, User
 from app.schemas.auth import RegisterRequest, TokenResponse
@@ -46,19 +47,21 @@ class AuthService:
         logger.info("user_registered", user_id=str(user.id), email=user.email)
         return user
 
-    def _log_failed_login(self, reason: str, email: str, role: str, user_id: str = None):
+    def _log_failed_login(self, reason: str, email: str, role: str = "", user_id: UUID | None = None):
         """Private helper function to eliminate repetive logging"""
         logger.warning("login_failed", email=email, reason=reason, user_id=user_id)
-        self.audit.log(
-            user_id, 
-            EventType.LOGIN_FAILED, 
-            {
-                "reason": reason,
-                "email": email,
-                "role": role
-            }
-        )
-        self.session.commit()
+
+        if user_id:
+            self.audit.log(
+                user_id, 
+                EventType.LOGIN_FAILED, 
+                {
+                    "reason": reason,
+                    "email": email,
+                    "role": role
+                }
+            )
+            self.session.commit()
 
     def authenticate(self, email: str, password: str) -> User | None:
         user = self.session.exec(
@@ -66,14 +69,14 @@ class AuthService:
         ).first()
         
         if not user:
-            self._log_failed_login(email=email, role=user.role.value, reason="user_not_found")
+            self._log_failed_login(email=email, reason="user_not_found")
             return None
         
         if not user.is_active:
             self._log_failed_login(
                 email=email, 
                 reason="user_disabled", 
-                user_id=str(user.id), 
+                user_id=user.id, 
                 role= user.role.value
             )
             return None
@@ -82,7 +85,7 @@ class AuthService:
             self._log_failed_login(
                 email=email, 
                 reason="bad_password", 
-                user_id=str(user.id), 
+                user_id=user.id, 
                 role= user.role.value
             )
             return None

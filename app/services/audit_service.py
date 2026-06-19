@@ -29,7 +29,7 @@ class AuditService:
         self.session.add(event)
 
         logger.info(
-            "audti_event",
+            "audit_event",
             event_type=event_type.value,
             user_id=str(user_id),
             details=details

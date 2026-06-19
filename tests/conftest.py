@@ -5,6 +5,8 @@ from sqlmodel.pool import StaticPool
 
 from app.db.session import get_session
 from app.main import app
+from app.core.security import hash_password
+from app.models import Role, User
 
 @pytest.fixture(name="session")
 def session_fixture():
@@ -29,3 +31,19 @@ def client_fixture(session: Session):
     yield client
     app.dependency_overrides.clear()
 
+@pytest.fixture(name="admin_token")
+def admin_token_fixture(client, session):
+    """Create a bootstrap admin in the test DB and return their access token."""
+    admin = User(
+        email="admin@example.com",
+        password_hash=hash_password("change-this-immediately"),
+        role=Role.ADMIN,
+    )
+    session.add(admin)
+    session.commit()
+
+    resp = client.post(
+        "/auth/login",
+        json={"email": "admin@example.com", "password": "change-this-immediately"},
+    )
+    return resp.json()["access_token"]
