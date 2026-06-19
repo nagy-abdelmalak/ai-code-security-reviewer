@@ -16,7 +16,7 @@ class AnalysisStatus(str, Enum):
 class Analysis(SQLModel, table=True):
     """One run of one analyzer on one submission"""
     id: UUID = Field(default_factory=uuid4, primary_key=True)
-    submission_id: UUID = Field(foreign_key="submission.id", index=True, nullable=False)
+    submission_id: UUID = Field(foreign_key="submission.id", index=True)
     status: AnalysisStatus
     analyzer_type: AnalyzerType
     prompt_version: str | None = Field(default=None)  # LLM only
