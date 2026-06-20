@@ -17,4 +17,5 @@ dependencies = [
     "sqlmodel>=0.0.38",
     "structlog>=26.1.0",
     "uvicorn==0.45.0",
+    "semgrep>=1.167.0",
 ]

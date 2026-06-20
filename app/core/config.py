@@ -27,7 +27,10 @@ class Settings(BaseSettings):
 
     # --- Semgrep ---
     SEMFREP_RULESET: str = "p/python"
-
+    SEMGREP_TIMEOUT: int = 30
+    # 500 is a safe, production-grade default threshold for a single file
+    MAX_FINDING_LIMIT: int = 500
+    
     # # --- LLM ---
     LLM_PROVIDER: str = "groq"
     LLM_MODEL: str = "llama3-8b-8192"
