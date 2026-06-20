@@ -5,7 +5,7 @@ from uuid import UUID
 from app.services.admin_service import AdminService, UserNotFound, InvalidRole
 from app.db.session import get_session
 from app.models import User, Role
-from app.api.routes.deps import require_role
+from app.api.deps import require_role
 from app.schemas.auth import UserResponse
 from app.schemas.auditor import (
     RoleChangeRequest, 

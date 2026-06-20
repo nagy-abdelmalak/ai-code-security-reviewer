@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Protocol, Sequence, runtime_checkable
 
-from app.models import Severity
+from app.models import Severity, AnalyzerType
 
 class AnalysisStatus(str, Enum):
     """The status of an analysis"""
@@ -36,10 +36,13 @@ class Analyzer(Protocol):
     """
     @property
     def name(self) -> str: ...
+
+    @property
+    def type(self) -> AnalyzerType: ...
     
     @property
     def version(self) -> str: ...
 
-    async def analyze(self, code: str) -> AnalysisResult:
+    async def analyze(self, code: str, language: str, explanation_enabled: bool) -> AnalysisResult:
         """Run the analyzer on the given code and return the result"""
         ...

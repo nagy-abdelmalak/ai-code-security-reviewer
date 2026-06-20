@@ -8,6 +8,13 @@ from app.models import Role, User
 from app.core.security import decode_token
 from app.db.session import get_session
 from app.core.logging import get_logger
+from app.services.analysis_service import (
+    AnalysisOrchestrator,
+    SubmissionRepository,
+    AnalysisService
+) 
+from app.services.audit_service import AuditService
+from app.analyzers.semgrep import SemmgrepAnalyzer
 
 logger = get_logger(__name__)
 
@@ -71,3 +78,22 @@ def require_role(*allowed_roles: Role):
             )
         return user
     return checker
+
+def get_analysis_service(session: Session = Depends(get_session)) -> AnalysisService:
+    """
+    Factory dependency that automatically constructs the AnalysisService 
+    with its full structural tree pre-assembled.
+    """
+    repo = SubmissionRepository(session)
+    audit = AuditService(session)
+    analyzers = [
+        SemmgrepAnalyzer()
+    ]
+    orchestrator = AnalysisOrchestrator(analyzers=analyzers)
+
+    return AnalysisService(
+        repo=repo,
+        orchestrator=orchestrator,
+        audit=audit,
+        session=session
+    )

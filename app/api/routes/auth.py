@@ -4,7 +4,7 @@ from sqlmodel import Session
 from app.schemas.auth import UserResponse, RegisterRequest, TokenResponse, LoginRequest
 from app.db.session import get_session
 from app.services.auth_service import AuthService, EmailAlreadyRegistered
-from app.api.routes.deps import get_current_user
+from app.api.deps import get_current_user
 from app.models import User
 
 router = APIRouter(prefix="/auth", tags=["auth"])
