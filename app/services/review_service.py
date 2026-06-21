@@ -105,7 +105,7 @@ class ReviewService:
             auditor: User,
             finding: Finding
     ):
-        analysis = self.seession.get(Analysis, finding.analysis_id)
+        analysis = self.session.get(Analysis, finding.analysis_id)
         if not analysis:
             FindingNotFound("Analysis not found")
         
