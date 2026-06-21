@@ -44,25 +44,26 @@ class SemgrepAnalyzer:
     def version(self) -> str:
         return "1.0"
     
-    async def analyze(self, code: str, language: str) -> AnalysisResult:
+    async def analyze(self, code: str, language: str, explanation_enabled: bool = False) -> AnalysisResult:
         start = time.monotonic()
         filepath = create_temp_file(code)
 
         try:
-            result = await self._run_semgrep(filepath)
+            result = await self._run_semgrep(filepath, language)
             elapsed = int((time.monotonic() - start) * 1000)
             result.duration_ms = elapsed 
             return result
         finally:
             delete_temp_file(filepath)
 
-    async def _run_semgrep(self, filepath) -> AnalysisResult:
+    async def _run_semgrep(self, filepath, language) -> AnalysisResult:
         """Run semgrep subprocess with timeout (ADR-007)"""
         try:
             # 1. Initialize the process raw descriptor
             raw_process = await asyncio.create_subprocess_exec(
                 "semgrep",
                 "--config", settings.SEMGREP_RULESET,
+                "--lang", language.lower(),
                 "--json",
                 "--quiet",
                 str(filepath),

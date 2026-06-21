@@ -36,6 +36,6 @@ class Analyzer(Protocol):
     @property
     def version(self) -> str: ...
 
-    async def analyze(self, code: str, language: str, explanation_enabled: bool) -> AnalysisResult:
+    async def analyze(self, code: str, language: str, explanation_enabled: bool = False) -> AnalysisResult:
         """Run the analyzer on the given code and return the result"""
         ...
