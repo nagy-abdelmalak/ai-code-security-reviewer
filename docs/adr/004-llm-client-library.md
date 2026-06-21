@@ -8,7 +8,7 @@ Options: a unifying library (LangChain) or each provider's native SDK.
 
 ## Decision
 
-Use LangChain inside the `LLMAnalyser` adapter. Provider choice (OpenAI, Anthropic, local Ollama) becomes a configuration concern, not a code change. Prompt templates are managed through LangChain's `PromptTemplate`, versioned via the `promptVersion` field on Analysis.
+The LLM provider is selected at deployment time via a single environment variable `LLM_PROVIDER`. The application uses LangChain's init_chat_model universal factory, which resolves the provider-specific client at runtime. Switching from OpenAI to Anthropic requires zero code changes.
 
 ## Consequences
 

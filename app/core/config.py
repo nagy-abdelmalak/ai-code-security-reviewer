@@ -3,6 +3,7 @@ from typing import Literal
 
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from app.models import LLMProvider
 
 class Settings(BaseSettings):
     # --- How Pydantic loads this ---
@@ -32,9 +33,13 @@ class Settings(BaseSettings):
     MAX_FINDING_LIMIT: int = 500
     
     # # --- LLM ---
-    LLM_PROVIDER: str = "groq"
-    LLM_MODEL: str = "llama3-8b-8192"
-    LLM_API_KEY: str = ""
+    LLM_PROVIDER: LLMProvider = LLMProvider.GROQ
+    LLM_MODEL: str = "llama-3.1-8b-instant"
+    LLM_TEMPERATURE = float = 0.0
+    GROQ_API_KEY: str = ""
+    OPENAI_API_KEY: str = ""
+    ANTHROPIC_API_KEY: str = ""
+    GEMINI_API_KEY: str = ""
 
     # # --- Security ---
     JWT_SECRET_KEY: str = ""
@@ -68,6 +73,21 @@ class Settings(BaseSettings):
     @property
     def is_test(self) -> bool:
       return self.ENVIRONMENT == 'test'
+    
+    @property
+    def active_llm_key(self) -> str:
+        """Dynamically fetch the key belonging to the active provider."""
+        provider_keys = {
+            "groq": self.GROQ_API_KEY,
+            "openai": self.OPENAI_API_KEY,
+            "anthropic": self.ANTHROPIC_API_KEY,
+            "gemini": self.GEMINI_API_KEY
+        }
+        
+        key = provider_keys.get(self.LLM_PROVIDER)
+        if not key:
+            raise ValueError(f"Missing API key for configured provider: '{self.llm_provider}'")
+        return key
 
 """
 lru_cache it tells python to create the below function only once, 

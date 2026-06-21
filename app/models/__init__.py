@@ -3,7 +3,7 @@ from app.models.auditor_assignment import AuditorAssignment
 from app.models.audit_event import AuditEvent, EventType
 from app.models.finding import FindingStatus, Finding, Severity
 from app.models.submission import Submission
-from app.models.analysis import Analysis, AnalysisStatus, AnalyzerType
+from app.models.analysis import Analysis, AnalysisStatus, AnalyzerType, LLMProvider
 
 __all__ = [
     "Role",
@@ -18,4 +18,5 @@ __all__ = [
     "Analysis",
     "AnalysisStatus",
     "AnalyzerType",
+    "LLMProvider"
 ]
