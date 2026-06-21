@@ -2,13 +2,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Protocol, Sequence, runtime_checkable
 
-from app.models import Severity, AnalyzerType
-
-class AnalysisStatus(str, Enum):
-    """The status of an analysis"""
-    COMPLETED = "completed"
-    FAILED = "failed"
-    ERROR = "error"
+from app.models import Severity, AnalyzerType, AnalysisStatus
 
 @dataclass(frozen=True)
 class AnalyzerFinding:

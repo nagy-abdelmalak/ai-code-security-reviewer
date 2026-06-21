@@ -2,12 +2,12 @@ import time
 import asyncio
 import json
 
-from app.analyzers.port import AnalysisResult, AnalysisStatus, AnalyzerFinding, Severity
+from app.analyzers.port import AnalysisResult, AnalyzerFinding, Severity
 from app.core.logging import get_logger
 from app.core.sandbox import create_temp_file, delete_temp_file
 from app.core.config import settings
 from app.core.safe_subprocess import safe_subprocess
-from app.models import AnalyzerType
+from app.models import AnalyzerType, AnalysisStatus
 
 logger = get_logger(__name__)
 
@@ -25,7 +25,7 @@ _SEVERITY_MAP = {
     "info": Severity.LOW,
 }
 
-class SemmgrepAnalyzer:
+class SemgrepAnalyzer:
     """
     Static analysis via Semgrep. ADR-007 defense-in-depth:
     - Static only (no code execution)
@@ -38,7 +38,7 @@ class SemmgrepAnalyzer:
         return "semgrep"
     
     @property
-    def name(self) -> AnalyzerType:
+    def type(self) -> AnalyzerType:
         return AnalyzerType.SEMGREP
     
     @property
@@ -63,7 +63,7 @@ class SemmgrepAnalyzer:
             # 1. Initialize the process raw descriptor
             raw_process = await asyncio.create_subprocess_exec(
                 "semgrep",
-                "--config", settings.SEMFREP_RULESET,
+                "--config", settings.SEMGREP_RULESET,
                 "--json",
                 "--quiet",
                 str(filepath),

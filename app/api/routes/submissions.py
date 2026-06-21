@@ -1,12 +1,13 @@
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlmodel import Session
+from sqlmodel import Session, select
 
 from app.core.logging import get_logger
 from app.schemas.submission import SubmissionRequest, SubmissionResponse
-from app.api.deps import require_role, get_analysis_service
+from app.api.deps import require_role, get_analysis_service, get_session
 from app.services.analysis_service import AnalysisService
 from app.models import Role, User
+from app.models import Finding, Analysis, Submission
 
 router = APIRouter(prefix="/submissions", tags=["submissions"])
 logger = get_logger(__name__)
@@ -19,20 +20,27 @@ logger = get_logger(__name__)
 async def submit_code_for_analysis(
     req: SubmissionRequest, 
     user: User = Depends(require_role(Role.DEVELOPER)),
-    service: AnalysisService = Depends(get_analysis_service)
+    service: AnalysisService = Depends(get_analysis_service),
+    session: Session = Depends(get_session)
 ):
     """
     Submit code for analysis. Developer only
     """
     try:
-        submission, _ = await service.create_and_analyze(
+        submission, analyses = await service.create_and_analyze(
             code=req.code,
             language=req.language,
-            user=User,
+            user=user,
             run_llm=req.run_llm,
             explanation_enabled=req.explanation_enabled
         )
-        return submission
+
+        analyses_with_findings = [
+            (a, list(session.exec(select(Finding).where(Finding.analysis_id == a.id)).all()))
+            for a in analyses
+        ]
+
+        return SubmissionResponse.from_orm(submission, analyses_with_findings)
     
     except Exception as e:
         raise HTTPException(

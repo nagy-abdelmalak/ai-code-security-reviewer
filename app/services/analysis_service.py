@@ -3,7 +3,7 @@ from uuid import UUID
 import asyncio
 from datetime import datetime, timezone
 
-from app.analyzers.port import Analyzer, AnalysisResult 
+from app.analyzers.port import Analyzer, AnalysisResult
 from app.core.logging import get_logger
 from app.services.audit_service import AuditService
 from app.models import (
@@ -32,10 +32,11 @@ class SubmissionRepository:
         return submission
     
 class AnalysisOrchestrator:
-    def __init__(self, analyzers: list[Analyzer]):
+    def __init__(self, session: Session, analyzers: list[Analyzer]):
+        self.session = session
         self.analyzers = analyzers
     
-    async def run_pipline(
+    async def run_pipeline(
             self,
             submission: Submission,
             run_llm: bool,
@@ -76,7 +77,7 @@ class AnalysisOrchestrator:
             started_at=datetime.now(timezone.utc)
         )
         if analyzer.type == AnalyzerType.SEMGREP:
-            analysis.ruleset_version = settings.SEMFREP_RULESET
+            analysis.ruleset_version = settings.SEMGREP_RULESET
         elif analyzer.type == AnalyzerType.LLM:
             analysis.prompt_version = analyzer.version
         
@@ -101,7 +102,8 @@ class AnalysisOrchestrator:
             else:
                 result: AnalysisResult = await analyzer.analyze(
                     code = submission.code,
-                    language=submission.language
+                    language=submission.language,
+                    explanation_enabled=False
                 )
             
             # 3. Process Execution Timelines
@@ -118,7 +120,7 @@ class AnalysisOrchestrator:
                         severity=f.severity,
                         line_number=f.line_number,
                         rule_id=f.rule_id,
-                        details=f.message,
+                        message=f.message,
                         explanation=f.explanation if explanation_enabled else None
                     )
                     self.session.add(finding)
@@ -188,7 +190,7 @@ class AnalysisService:
             explanation_enabled: bool = False
     ):
         """
-        Executes a pipline submission and triggers concurrent analytics tracking
+        Executes a pipeline submission and triggers concurrent analytics tracking
         """
         # Step 1: create submission
         submission = self.repo.create(
@@ -199,7 +201,7 @@ class AnalysisService:
 
         try:
             # Step 2: Delegate parallel analyzers execution to the orchestrator
-            analysis_records = await self.orchestrator.run_pipline(
+            analysis_records = await self.orchestrator.run_pipeline(
                 submission=submission,
                 run_llm=run_llm,
                 explanation_enabled=explanation_enabled
@@ -209,7 +211,7 @@ class AnalysisService:
             self.audit.log(
                 user_id=user.id,
                 event_type=EventType.SUBMISSION_CREATED,
-                payload={"submission_id": str(submission.id)}
+                details={"submission_id": str(submission.id)}
             )
 
             self.session.commit()

@@ -12,6 +12,7 @@ class AnalysisStatus(str, Enum):
     RUNNING = "running"
     COMPLETED = "completed"
     FAILED = "failed"
+    ERROR = "error"
 
 class Analysis(SQLModel, table=True):
     """One run of one analyzer on one submission"""

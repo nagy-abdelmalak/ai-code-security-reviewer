@@ -14,7 +14,7 @@ from app.services.analysis_service import (
     AnalysisService
 ) 
 from app.services.audit_service import AuditService
-from app.analyzers.semgrep import SemmgrepAnalyzer
+from app.analyzers.semgrep import SemgrepAnalyzer
 
 logger = get_logger(__name__)
 
@@ -85,15 +85,13 @@ def get_analysis_service(session: Session = Depends(get_session)) -> AnalysisSer
     with its full structural tree pre-assembled.
     """
     repo = SubmissionRepository(session)
-    audit = AuditService(session)
     analyzers = [
-        SemmgrepAnalyzer()
+        SemgrepAnalyzer()
     ]
-    orchestrator = AnalysisOrchestrator(analyzers=analyzers)
+    orchestrator = AnalysisOrchestrator(session=session, analyzers=analyzers)
 
     return AnalysisService(
         repo=repo,
         orchestrator=orchestrator,
-        audit=audit,
         session=session
     )

@@ -21,7 +21,7 @@ class Finding(SQLModel, table=True):
     severity: Severity
     line_number: int = Field(gt=0)
     rule_id: str
-    details: str
+    message: str
     explanation: str | None = None
     status: FindingStatus = FindingStatus.UNREVIEWED
     created_at: datetime = Field(
