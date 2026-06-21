@@ -53,7 +53,7 @@ class LLMAnalyzer:
         )
 
         # Load prompt template
-        prompt_path = PROMPT_DIR / f"{self._prompt_version}.txt"
+        prompt_path = PROMPT_DIR / f"{self.prompt_version}.txt"
         if not prompt_path.exists():
             raise FileNotFoundError(f"Prompt template not found: {prompt_path}")
         self._prompt_template = prompt_path.read_text()
@@ -87,8 +87,8 @@ class LLMAnalyzer:
 
         logger.info(
             "llm_analysis_started",
-            model=self._model,
-            prompt_version=self._prompt_version,
+            model=self.model,
+            prompt_version=self.prompt_version,
             code_lines=len(code.splitlines()),
         )
 
@@ -106,7 +106,7 @@ class LLMAnalyzer:
 
             logger.info(
                 "llm_analysis_completed",
-                model=self._model,
+                model=self.model,
                 findings_count=len(findings),
                 duration_ms=elapsed,
             )
@@ -121,7 +121,7 @@ class LLMAnalyzer:
             elapsed = int((time.monotonic() - start) * 1000)
             logger.warning(
                 "llm_analysis_failed",
-                model=self._model,
+                model=self.model,
                 error=str(e),
                 duration_ms=elapsed,
             )
