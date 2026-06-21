@@ -82,10 +82,9 @@ def test_decode_expired_token():
 
 def test_decode_token_rejects_wrong_secret():
     foreign_token = jwt.encode(
-        {"sub": "user-333"},
-        "wrong-secret",
-        algorithm=settings.JWT_ALGORITHM
+        {"sub": "u"},
+        "wrong-secret-that-is-also-at-least-32-bytes-long!!",
+        algorithm=settings.jwt_algorithm,
     )
-
     with pytest.raises(PyJWTError):
         decode_token(foreign_token)

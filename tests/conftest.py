@@ -1,5 +1,5 @@
 import os
-os.environ["JWT_SECRET_KEY"] = "test-secret-for-pytest"
+os.environ["JWT_SECRET_KEY"] = "test-secret-for-pytest-that-is-at-least-32-bytes-long!"
 os.environ["INITIAL_ADMIN_EMAIL"] = "admin@test.local"
 os.environ["INITIAL_ADMIN_PASSWORD"] = "test-password"
 os.environ["DATABASE_URL"] = "sqlite:///./test.db"

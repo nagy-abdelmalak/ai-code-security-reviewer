@@ -278,13 +278,3 @@ class AnalysisService:
             })
 
         return result
-
-    def list_user_submissions(self, user_id: UUID) -> list[Submission]:
-        """List all submissions for a user (history)."""
-        return list(
-            self.session.exec(
-                select(Submission)
-                .where(Submission.user_id == user_id)
-                .order_by(Submission.created_at.desc())
-            ).all()
-        )
