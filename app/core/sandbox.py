@@ -28,9 +28,9 @@ def create_temp_file(code: str, suffix: str = ".py") -> str:
 
     logger.info("temp_file_created", path=str(file_path))
 
-    return str(file_path)
+    return file_path
 
-def delete_temp_file(filepath: str) -> None:
+def delete_temp_file(filepath: Path) -> None:
     """Delete a temporary file created by create_temp_file"""
     try:
         filepath.unlink(missing_ok=True)
