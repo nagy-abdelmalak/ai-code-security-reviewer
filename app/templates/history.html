@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}History{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <h2>Submission History</h2>
+        <a href="/web/submit" class="btn btn-sm btn-primary">New Submission</a>
+    </div>
+
+    {% if submissions|length == 0 %}
+    <div class="empty">
+        <p>No submissions yet.</p>
+        <a href="/web/submit" class="btn btn-primary" style="margin-top:12px;">Submit your first code</a>
+    </div>
+    {% else %}
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Language</th>
+                <th>Source</th>
+                <th>Date</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for sub in submissions %}
+            <tr>
+                <td style="font-family:monospace; font-size:0.85rem;">{{ sub.id[:8] }}...</td>
+                <td>{{ sub.language }}</td>
+                <td>{{ sub.source_mode }}</td>
+                <td style="font-size:0.85rem;">{{ sub.created_at }}</td>
+                <td><a href="/web/results/{{ sub.id }}" class="btn btn-sm btn-primary">View</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+</div>
+{% endblock %}
