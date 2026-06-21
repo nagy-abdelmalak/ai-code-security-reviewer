@@ -57,19 +57,26 @@ class SemgrepAnalyzer:
             delete_temp_file(filepath)
 
     async def _run_semgrep(self, filepath, language) -> AnalysisResult:
+        logger.info(
+            "inside_run_semgrep", 
+            filepath=str(filepath), 
+            language=language, 
+            ruleset=settings.SEMGREP_RULESET
+        )
+
         """Run semgrep subprocess with timeout (ADR-007)"""
         try:
             # 1. Initialize the process raw descriptor
             raw_process = await asyncio.create_subprocess_exec(
                 "semgrep",
-                "--config", settings.SEMGREP_RULESET,
-                "--lang", language,
+                "scan",                              # explicit subcommand
+                "--config", settings.SEMGREP_RULESET, # e.g., "p/python" or "auto"
                 "--json",
                 "--quiet",
-                str(filepath),
+                str(filepath),                       # the file to scan
                 stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE
-            )
+                stderr=asyncio.subprocess.PIPE,
+            )  
 
             # 2. Safely wrap execution inside the context manager
             async with safe_subprocess(raw_process) as process:
