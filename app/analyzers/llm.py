@@ -2,8 +2,8 @@ from datetime import time
 import json
 from pathlib import Path
 
-from langchain_core.language_models.chat_models import init_chat_model
-from langchain_core.messages import HumanMessage, SystemMessage
+from langchain.chat_models import init_chat_model
+from langchain_core.messages import HumanMessage
 
 from app.models import Severity, AnalyzerType
 from app.core.logging import get_logger
