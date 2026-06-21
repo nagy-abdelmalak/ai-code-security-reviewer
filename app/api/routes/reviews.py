@@ -16,7 +16,7 @@ from app.services.review_service import (
 
 logger = get_logger(__name__)
 
-router = APIRouter(prefix="reviews", tags=["reviews"])
+router = APIRouter(prefix="/reviews", tags=["reviews"])
 
 @router.post(
     "/{finding_id}/reviews",
