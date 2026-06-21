@@ -1,3 +1,10 @@
+import os
+os.environ.setdefault("JWT_SECRET", "test-secret-for-pytest")
+os.environ.setdefault("INITIAL_ADMIN_EMAIL", "admin@test.local")
+os.environ.setdefault("INITIAL_ADMIN_PASSWORD", "test-password")
+os.environ.setdefault("DATABASE_URL", "sqlite:///./test.db")
+os.environ.setdefault("ENVIRONMENT", "testing")
+
 import pytest
 from fastapi import Depends
 from fastapi.testclient import TestClient
