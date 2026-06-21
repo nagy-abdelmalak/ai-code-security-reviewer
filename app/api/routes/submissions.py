@@ -29,7 +29,7 @@ async def submit_code_for_analysis(
     try:
         submission, analyses = await service.create_and_analyze(
             code=req.code,
-            language=req.language,
+            language=req.language.strip().lower(),
             user=user,
             run_llm=req.run_llm,
             explanation_enabled=req.explanation_enabled

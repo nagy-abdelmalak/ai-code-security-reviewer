@@ -63,7 +63,7 @@ class SemgrepAnalyzer:
             raw_process = await asyncio.create_subprocess_exec(
                 "semgrep",
                 "--config", settings.SEMGREP_RULESET,
-                "--lang", language.lower(),
+                "--lang", language,
                 "--json",
                 "--quiet",
                 str(filepath),
