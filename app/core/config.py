@@ -35,7 +35,7 @@ class Settings(BaseSettings):
     # # --- LLM ---
     LLM_PROVIDER: LLMProvider = LLMProvider.GROQ
     LLM_MODEL: str = "llama-3.1-8b-instant"
-    LLM_TEMPERATURE = float = 0.0
+    LLM_TEMPERATURE: float = 0.0
     GROQ_API_KEY: str = ""
     OPENAI_API_KEY: str = ""
     ANTHROPIC_API_KEY: str = ""
