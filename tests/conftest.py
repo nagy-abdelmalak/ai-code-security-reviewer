@@ -24,6 +24,59 @@ from app.services.analysis_service import (
     SubmissionRepository,
 )
 
+class MockLLMAnalyzer:
+    """Fake LLM analyzer for testing without real API calls."""
+
+    @property
+    def name(self) -> str:
+        return "llm"
+
+    @property
+    def type(self) -> AnalyzerType:
+        return AnalyzerType.LLM
+
+    @property
+    def version(self) -> str:
+        return "mock-v1"
+
+    async def analyze(
+        self, code: str, language: str, explanation_enabled: bool = True
+    ) -> AnalysisResult:
+        findings = []
+        for i, line in enumerate(code.splitlines(), start=1):
+            if "password" in line.lower() and "=" in line:
+                findings.append(
+                    AnalyzerFinding(
+                        severity=Severity.HIGH,
+                        line_number=i,
+                        rule_id="llm-hardcoded-secret",
+                        message="LLM detected a hardcoded secret",
+                        explanation=(
+                            "Hardcoded secrets can be extracted from source code."
+                            if explanation_enabled
+                            else None
+                        ),
+                    )
+                )
+            if "eval(" in line:
+                findings.append(
+                    AnalyzerFinding(
+                        severity=Severity.HIGH,
+                        line_number=i,
+                        rule_id="llm-code-injection",
+                        message="Use of eval() allows arbitrary code execution",
+                        explanation=(
+                            "eval() executes any string as code, enabling injection."
+                            if explanation_enabled
+                            else None
+                        ),
+                    )
+                )
+        return AnalysisResult(
+            status=AnalysisStatus.COMPLETED,
+            findings=findings,
+            duration_ms=50,
+        )
 
 class MockSemgrepAnalyzer:
     """Fake semgrep analyzer for testing without real semgrep installed."""
@@ -76,21 +129,18 @@ def session_fixture():
 
 @pytest.fixture(name="client")
 def client_fixture(session: Session):
-    """TestClient with DB and analyzer overrides."""
-
     def get_session_override():
         return session
 
     app.dependency_overrides[get_session] = get_session_override
 
-    # Override analysis service to use mock analyzer
     try:
         from app.api.deps import get_analysis_service
 
         def get_mock_service(session: Session = Depends(get_session)):
             repo = SubmissionRepository(session)
             orchestrator = AnalysisOrchestrator(
-                analyzers=[MockSemgrepAnalyzer()],
+                analyzers=[MockSemgrepAnalyzer(), MockLLMAnalyzer()],
                 session=session,
             )
             return AnalysisService(
