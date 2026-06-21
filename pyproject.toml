@@ -19,3 +19,8 @@ dependencies = [
     "uvicorn==0.45.0",
     "semgrep>=1.167.0",
 ]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.15.18",
+]
