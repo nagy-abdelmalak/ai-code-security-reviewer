@@ -5,7 +5,6 @@ from app.models.finding import Finding, Severity, FindingStatus
 from app.models.submission import Submission
 from app.models.user import Role, User
 
-
 def _setup_finding_with_auditor(session):
     """
     Create a full chain: developer → submission → analysis → finding,
