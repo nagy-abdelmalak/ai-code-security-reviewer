@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}Results — {{ submission.id[:8] }}{% endblock %}
+
+{% block content %}
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+    <div>
+        <h2>Analysis Results</h2>
+        <p style="color:var(--text-muted); font-size:0.85rem;">
+            Submission {{ submission.id[:8] }}... | {{ submission.language }} | {{ submission.created_at }}
+        </p>
+    </div>
+    <a href="/export/{{ submission.id }}/json" class="btn btn-sm btn-primary">Export JSON</a>
+</div>
+
+{% if analyses|length == 0 %}
+<div class="empty">No analyses found.</div>
+{% elif analyses|length == 1 %}
+    {# Single analysis — full width #}
+    {% set analysis = analyses[0] %}
+    <div class="analysis-panel">
+        <h3>
+            {% if analysis.analyzer_type == "semgrep" %}🔍 Semgrep{% else %}🤖 LLM{% endif %}
+            <span class="status-badge status-{{ analysis.status }}">{{ analysis.status }}</span>
+            {% if analysis.duration_ms %}<span style="color:var(--text-muted); font-size:0.8rem;">{{ analysis.duration_ms }}ms</span>{% endif %}
+        </h3>
+
+        {% if analysis.error_message %}
+        <div class="alert alert-error">{{ analysis.error_message }}</div>
+        {% endif %}
+
+        {% if analysis.findings|length == 0 %}
+        <div class="empty">No findings — code looks clean! ✅</div>
+        {% else %}
+            {% for finding in analysis.findings %}
+            {% include "partials/finding_card.html" %}
+            {% endfor %}
+        {% endif %}
+    </div>
+
+{% else %}
+    {# Two analyses — side by side comparison #}
+    <div class="comparison">
+        {% for analysis in analyses %}
+        <div class="analysis-panel">
+            <h3>
+                {% if analysis.analyzer_type == "semgrep" %}🔍 Semgrep{% else %}🤖 LLM{% endif %}
+                <span class="status-badge status-{{ analysis.status }}">{{ analysis.status }}</span>
+                {% if analysis.duration_ms %}<span style="color:var(--text-muted); font-size:0.8rem;">{{ analysis.duration_ms }}ms</span>{% endif %}
+            </h3>
+
+            {% if analysis.error_message %}
+            <div class="alert alert-error">{{ analysis.error_message }}</div>
+            {% endif %}
+
+            {% if analysis.findings|length == 0 %}
+            <div class="empty">No findings ✅</div>
+            {% else %}
+                {% for finding in analysis.findings %}
+                {% include "partials/finding_card.html" %}
+                {% endfor %}
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+{% endif %}
+
+<div style="margin-top:20px;">
+    <a href="/web/history" style="color:var(--accent);">← Back to History</a>
+</div>
+{% endblock %}

@@ -1,0 +1,22 @@
+<div class="finding">
+    <div class="finding-header">
+        <div>
+            <span class="severity severity-{{ finding.severity }}">{{ finding.severity }}</span>
+            <span class="line-number">Line {{ finding.line_number }}</span>
+        </div>
+        <span class="status-badge status-{{ finding.status }}">{{ finding.status }}</span>
+    </div>
+
+    <p style="font-size:0.85rem; margin-bottom:4px;">
+        <strong>{{ finding.rule_id }}</strong>
+    </p>
+    <p style="font-size:0.85rem; color:var(--text-muted);">
+        {{ finding.message }}
+    </p>
+
+    {% if finding.explanation %}
+    <div style="margin-top:8px; padding:8px; background:rgba(99,102,241,0.1); border-radius:4px; font-size:0.8rem;">
+        💡 {{ finding.explanation }}
+    </div>
+    {% endif %}
+</div>
