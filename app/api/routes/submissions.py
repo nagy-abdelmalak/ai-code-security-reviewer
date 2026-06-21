@@ -7,7 +7,7 @@ from app.schemas.submission import SubmissionRequest, SubmissionResponse
 from app.api.deps import require_role, get_analysis_service, get_session
 from app.services.analysis_service import AnalysisService
 from app.models import Role, User
-from app.models import Finding, Analysis, Submission
+from app.models import Finding
 
 router = APIRouter(prefix="/submissions", tags=["submissions"])
 logger = get_logger(__name__)

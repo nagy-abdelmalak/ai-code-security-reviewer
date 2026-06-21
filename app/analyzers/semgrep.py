@@ -22,7 +22,6 @@ _SEVERITY_MAP = {
     # Legacy Backwards Compatibility (Crucial for community rulesets)
     "error": Severity.HIGH,
     "warning": Severity.MEDIUM,
-    "info": Severity.LOW,
 }
 
 class SemgrepAnalyzer:
@@ -116,8 +115,7 @@ class SemgrepAnalyzer:
             logger.warning("semgrep_partial_payload_corruption")
             return AnalysisResult(
                 status=AnalysisStatus.FAILED,
-                findings=findings,  # Returns the items successfully parsed up to this point
-                error_message="Payload corrupted mid-transfer, partial findings returned."
+                error_message="Payload corrupted mid-transfer"
             )
         
         results = data.get("results", [])

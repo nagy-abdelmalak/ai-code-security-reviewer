@@ -1,4 +1,5 @@
 from pydantic import BaseModel, Field
+from typing import Self 
 
 class SubmissionRequest(BaseModel):
     """payload for POST /submissions"""
@@ -26,7 +27,7 @@ class AnalysisResponse(BaseModel):
     duration_ms: int | None = None
 
     @classmethod
-    def from_orm(cls, analysis, findings) -> "AnalysisResponse":
+    def from_orm(cls, analysis, findings) -> Self:
         return cls(
             id=str(analysis.id),
             analyzer_type=analysis.analyzer_type.value,
@@ -60,7 +61,7 @@ class SubmissionResponse(BaseModel):
     analyses: list[AnalysisResponse]
 
     @classmethod
-    def from_orm(cls, submission, analyses_with_findings: list[tuple]) -> SubmissionResponse:
+    def from_orm(cls, submission, analyses_with_findings: list[tuple]) -> Self:
         """
         Build response from domain objects.
         analyses_with_findings: list of (Analysis, list[Finding]) tuples.

@@ -12,8 +12,7 @@ from app.services.analysis_service import (
     AnalysisOrchestrator,
     SubmissionRepository,
     AnalysisService
-) 
-from app.services.audit_service import AuditService
+)
 from app.analyzers.semgrep import SemgrepAnalyzer
 
 logger = get_logger(__name__)
