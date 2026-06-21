@@ -7,7 +7,6 @@ from sqlmodel import Session, select
 
 from app.api.deps import require_role
 from app.db.session import get_session
-from app.services.analysis_service import AnalysisService
 from app.models import (
     Role, 
     User,
@@ -29,7 +28,7 @@ def export_submission_json(
     Export a submission with all analyses and findings as downloadable JSON.
     Used for thesis data analysis.
     """
-    
+
     submission = session.get(Submission, submission_id)
     if not submission:
         raise HTTPException(

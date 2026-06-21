@@ -1,5 +1,3 @@
-import json
-
 VULNERABLE_CODE = """
 import os
 DB_PASSWORD = "super_secret_123"
