@@ -99,26 +99,26 @@ class SemgrepAnalyzer:
         except asyncio.TimeoutError:
             logger.warning("semgrep_timeout", timeout=settings.SEMGREP_TIMEOUT)
             return AnalysisResult(
-                success=False,
+                status=False,
                 error_message=f"Semgrep timed out after {settings.SEMGREP_TIMEOUT}s",
             )
         except FileNotFoundError:
             logger.error("semgrep_not_installed")
             return AnalysisResult(
-                success=False,
+                status=False,
                 error_message="Semgrep is not installed on this system",
             )
         except Exception as e:
             logger.exception("semgrep_unexpected_crash")
             return AnalysisResult(
-                success=False,
+                status=False,
                 error_message=f"Unexpected internal analyzer error: {str(e)}"
             )
         
     def _parse_output(self, raw_json: str) -> AnalysisResult:
         """Parse semgrep JSON output into AnalyzerFindings"""
         try:
-            data = json.load(raw_json)
+            data = json.loads(raw_json)
         except json.JSONDecodeError:
             logger.warning("semgrep_partial_payload_corruption")
             return AnalysisResult(
