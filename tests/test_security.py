@@ -84,7 +84,7 @@ def test_decode_token_rejects_wrong_secret():
     foreign_token = jwt.encode(
         {"sub": "u"},
         "wrong-secret-that-is-also-at-least-32-bytes-long!!",
-        algorithm=settings.jwt_algorithm,
+        algorithm=settings.JWT_ALGORITHM,
     )
     with pytest.raises(PyJWTError):
         decode_token(foreign_token)
