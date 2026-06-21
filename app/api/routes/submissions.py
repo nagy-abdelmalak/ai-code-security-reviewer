@@ -1,4 +1,6 @@
 from uuid import UUID
+from datetime import datetime
+from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session, select
 
@@ -6,7 +8,7 @@ from app.core.logging import get_logger
 from app.schemas.submission import SubmissionRequest, SubmissionResponse
 from app.api.deps import require_role, get_analysis_service, get_session
 from app.services.analysis_service import AnalysisService
-from app.models import Role, User
+from app.models import Role, User, Submission, Analysis
 from app.models import Finding
 
 router = APIRouter(prefix="/submissions", tags=["submissions"])
@@ -51,10 +53,69 @@ async def submit_code_for_analysis(
 @router.get("/")
 async def list_submissions(
     user: User = Depends(require_role(Role.DEVELOPER)),
-    service: AnalysisService = Depends(get_analysis_service),
+    session: Session = Depends(get_session),
+    severity: Optional[str] = None,
+    status: Optional[str] = None,
+    date_from: Optional[str] = None,
+    date_to: Optional[str] = None
 ):
-    """List current user's submissions (history)."""
-    submissions = service.list_user_submissions(user.id)
+    """
+    List current user's submissions (history).
+    
+    Filters:
+    - severity: filter submissions that have at least one finding of this severity
+    - status: filter submissions that have at least one finding with this review status
+    - date_from/date_to: filter based on create_at dates
+    """
+    # submissions = service.list_user_submissions(user.id)
+    query = (
+        select(Submission)
+        .where(Submission.user_id == user.id)
+        .order_by(Submission.created_at.desc())
+    )
+    
+    # Data filters
+    if date_to:
+        try:
+            dt = datetime.fromisoformat(date_to)
+            query = query.where(Submission.created_at >= dt)
+        except ValueError:
+            pass
+    
+    if date_from:
+        try:
+            dt = datetime.fromisoformat(date_from)
+            query = query.where(Submission.created_at >= dt)
+        except ValueError:
+            pass
+
+    submissions = list(session.exec(query).all())
+
+    # severity and status filters require joining through analyses/findings
+    if severity or status:
+        filtered = []
+        for s in submissions:
+            analyses = session.exec(
+                select(Analysis)
+                .where(Analysis.submission_id == s.id)
+            ).all()
+
+            dominated = False
+            for a in analyses:
+                findings = session.exec(
+                    select(Finding)
+                    .where(Finding.analysis_id == a.id)
+                ).all()
+
+                for f in findings:
+                    if f.severity.value == severity or f.status.value == status:
+                        dominated = True
+        
+        if dominated:
+            filtered.append(s)
+
+    submissions = filtered
+
     return [
         {
             "id": str(s.id),
