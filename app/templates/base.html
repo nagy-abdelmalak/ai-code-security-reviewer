@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}AI Code Security Reviewer{% endblock %}</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    {% if token %}
+    <nav>
+        <div class="container">
+            <a href="/web/" class="logo">AI Code Security Reviewer</a>
+            <ul class="nav-links">
+                <li><a href="/web/submit">Submit Code</a></li>
+                <li><a href="/web/history">History</a></li>
+                <li><a href="/web/logout">Logout</a></li>
+            </ul>
+        </div>
+    </nav>
+    {% endif %}
+
+    <div class="container">
+        {% block content %}{% endblock %}
+    </div>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Register — AI Code Security Reviewer{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="card">
+        <h2>Register</h2>
+
+        {% if error %}
+        <div class="alert alert-error">{{ error }}</div>
+        {% endif %}
+
+        {% if success %}
+        <div class="alert alert-success">{{ success }}</div>
+        {% endif %}
+
+        <form method="post" action="/web/register">
+            <label for="email">Email</label>
+            <input type="email" name="email" id="email" required>
+
+            <label for="password">Password (min 8 characters)</label>
+            <input type="password" name="password" id="password" minlength="8" required>
+
+            <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:12px;">
+                All new accounts are registered as Developer. Contact an Admin for role changes.
+            </p>
+
+            <button type="submit" class="btn btn-primary" style="width:100%; margin-top:8px;">
+                Register
+            </button>
+        </form>
+
+        <p style="text-align:center; margin-top:16px; color:var(--text-muted); font-size:0.85rem;">
+            Already have an account? <a href="/web/login" style="color:var(--accent);">Login</a>
+        </p>
+    </div>
+</div>
+{% endblock %}

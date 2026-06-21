@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Login — AI Code Security Reviewer{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="card">
+        <h2>Login</h2>
+
+        {% if error %}
+        <div class="alert alert-error">{{ error }}</div>
+        {% endif %}
+
+        <form method="post" action="/web/login">
+            <label for="email">Email</label>
+            <input type="email" name="email" id="email" required>
+
+            <label for="password">Password</label>
+            <input type="password" name="password" id="password" required>
+
+            <button type="submit" class="btn btn-primary" style="width:100%; margin-top:8px;">
+                Login
+            </button>
+        </form>
+
+        <p style="text-align:center; margin-top:16px; color:var(--text-muted); font-size:0.85rem;">
+            Don't have an account? <a href="/web/register" style="color:var(--accent);">Register</a>
+        </p>
+    </div>
+</div>
+{% endblock %}
