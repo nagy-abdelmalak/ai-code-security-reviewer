@@ -114,7 +114,7 @@ async def list_submissions(
         if dominated:
             filtered.append(s)
 
-    submissions = filtered
+        submissions = filtered
 
     return [
         {
