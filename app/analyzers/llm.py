@@ -1,5 +1,6 @@
 import time
 import json
+import re
 from pathlib import Path
 
 from langchain.chat_models import init_chat_model
@@ -135,18 +136,23 @@ class LLMAnalyzer:
         self, raw_text: str, explanation_enabled: bool
     ) -> list[AnalyzerFinding]:
         """Parse LLM JSON response into AnalyzerFindings"""
-        # Strip markdown fences if present (LLMs sometimes add them)
-        cleaned = raw_text.strip()
-        if cleaned.startswith("```"):
-            cleaned = cleaned.split("\n", 1)[1] if "\n" in cleaned else cleaned
-        if cleaned.endswith("```"):
-            cleaned = cleaned.rsplit("```", 1)[0]
-        cleaned = cleaned.strip()
+        if not raw_text:
+            return []
+
+        # 1. Regex to locate the outermost JSON array structure safely
+        # This ignores any prefix (like ```json) and any trailing conversational text.
+        match = re.search(r"\[.*\]", raw_text, re.DOTALL)
+        if not match:
+            logger.warning("llm_no_json_array_found", raw_text=raw_text[:200])
+            return []
+
+        cleaned = match.group(0).strip()
 
         try:
             data = json.loads(cleaned)
-        except json.JSONDecodeError:
-            logger.warning("llm_parse_error", raw_text=raw_text[:200])
+        except json.JSONDecodeError as e:
+            # Include the exception error details for clearer local debugging
+            logger.warning("llm_parse_error", error=str(e), cleaned_text=cleaned[:200])
             return []
 
         if not isinstance(data, list):
