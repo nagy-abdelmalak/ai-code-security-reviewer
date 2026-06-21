@@ -1,5 +1,6 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 import uuid
 import structlog
@@ -57,6 +58,8 @@ app = FastAPI(
     lifespan=lifespan,
     # dependencies=[Depends(get_session)],
 )
+
+app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
 app.include_router(auth.router)
 app.include_router(admin.router)
