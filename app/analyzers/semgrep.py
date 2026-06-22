@@ -60,17 +60,17 @@ class SemgrepAnalyzer:
         """Run semgrep subprocess with timeout (ADR-007)"""
         try:
             # 1. Initialize the process raw descriptor
-            # Build the command args
-            args = ["semgrep", "scan", "--json", "--quiet"]
-
-            # Add each ruleset as a separate --config
-            for ruleset in settings.SEMGREP_RULESET.split(","):
-                args.extend(["--config", ruleset.strip()])
-
-            args.append(str(filepath))
-
             raw_process = await asyncio.create_subprocess_exec(
-                *args,
+                "semgrep",
+                "scan",
+                "--config", settings.SEMGREP_RULESET,
+                "--timeout=0",
+                "--max-target-bytes=0",  # Added missing comma here
+                "--json",
+                "--quiet",              # Forces clean JSON output, suppresses banners
+                "--error",              # Exits with 0 even if vulnerabilities are found
+                "--metrics=off",
+                str(filepath),
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
             )
