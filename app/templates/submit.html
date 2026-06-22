@@ -13,29 +13,29 @@
         <label for="code">Paste your Python code</label>
         <textarea name="code" id="code" placeholder="# Paste your Python code here...">{{ code or '' }}</textarea>
 
+        <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:16px;">
+            ⚠️ <b>Disable LLM analysis for confidential code</b>
+            It transmits your code to the external LLM provider.
+        </p>
+
         <div class="toggle-group">
             <input type="checkbox" name="run_llm" id="run_llm" value="true">
-            <label for="run_llm" style="margin:0;">Run LLM analysis (sends code to external provider)</label>
+            <label for="run_llm" style="margin:0;">Run LLM analysis</label>
         </div>
 
         <div id="llm-options" style="display:none; margin-left:24px; margin-bottom:12px;">
-            <label for="llm_model">LLM Model</label>
+            <!-- <label for="llm_model">LLM Model</label>
             <select name="llm_model" id="llm_model">
                 {% for model in llm_models %}
                 <option value="{{ model.value }}">{{ model.label }}</option>
                 {% endfor %}
-            </select>
-        </div>
+            </select> -->
 
-        <div class="toggle-group">
-            <input type="checkbox" name="explanation_enabled" id="explanation_enabled" value="true">
-            <label for="explanation_enabled" style="margin:0;">Include plain-language explanations</label>
+            <div class="toggle-group">
+                <input type="checkbox" name="explanation_enabled" id="explanation_enabled" value="true">
+                <label for="explanation_enabled" style="margin:0;">Include plain-language explanations</label>
+            </div>
         </div>
-
-        <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:16px;">
-            ⚠️ LLM analysis transmits your code to the external provider.
-            Disable LLM analysis for confidential code.
-        </p>
 
         <button type="submit" class="btn btn-primary" id="analyze-btn">
             Analyze
