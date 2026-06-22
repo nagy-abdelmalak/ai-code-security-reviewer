@@ -146,8 +146,8 @@ async def submit_page(
 async def submit_code(
     request: Request,
     code: str = Form(...),
-    run_llm_str: str = Form(default=""),
-    explanation_enabled_str: str = Form(default=""),
+    run_llm: str = Form(default=""),
+    explanation_enabled: str = Form(default=""),
     session: Session = Depends(get_session)
 ):
     user = _get_current_user_from_cookie(request, session)
@@ -155,18 +155,15 @@ async def submit_code(
         return RedirectResponse(
             url="/web/login", status_code=status.HTTP_303_SEE_OTHER
         )
-    
-    run_llm = run_llm_str == "true"
-    explanation_enabled = explanation_enabled_str == "true"
 
-    service = get_analysis_service(session=session, run_llm=run_llm)
+    service = get_analysis_service(session=session, run_llm=(run_llm == "true"))
     try:
         submission, _ = await service.create_and_analyze(
             code=code,
             language="python",
             user=user,
-            run_llm=run_llm,
-            explanation_enabled=explanation_enabled
+            run_llm=(run_llm == "true"),
+            explanation_enabled=(explanation_enabled == "true")
         )
         return RedirectResponse(
             url=f"/web/results/{submission.id}",
