@@ -83,7 +83,7 @@ async def register_submit(
         service.register(
             type("Req", (), {"email": email, "password": password})
         )
-    except EmailAlreadyRegistered as e:
+    except EmailAlreadyRegistered:
         return templates.TemplateResponse(
             request, "register.html",
             {"request": request, "error": "Email already registered", "token": None}
