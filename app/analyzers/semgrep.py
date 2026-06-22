@@ -57,13 +57,6 @@ class SemgrepAnalyzer:
             delete_temp_file(filepath)
 
     async def _run_semgrep(self, filepath, language) -> AnalysisResult:
-        logger.info(
-            "inside_run_semgrep", 
-            filepath=str(filepath), 
-            language=language, 
-            ruleset=settings.SEMGREP_RULESET
-        )
-
         """Run semgrep subprocess with timeout (ADR-007)"""
         try:
             # 1. Initialize the process raw descriptor
