@@ -83,7 +83,11 @@ app.include_router(web.router)
 # --- Middleware ---
 @app.middleware("http")
 async def add_request_id(request: Request, call_next):
-    """Bind a unique request ID to every log emitted during this request."""
+    """Bind a unique request ID to every log emitted during this request.
+
+    Minimal: capture request body, log a truncated view, and replay the body
+    for downstream handlers so behavior is unchanged.
+    """
     request_id = request.headers.get("X-Request-ID") or str(uuid.uuid4())
     structlog.contextvars.clear_contextvars()
     structlog.contextvars.bind_contextvars(
@@ -91,21 +95,37 @@ async def add_request_id(request: Request, call_next):
         method=request.method,
         path=request.url.path,
     )
+
+    # Read body and log a truncated representation (safe size)
+    try:
+        body_bytes = await request.body()
+        body_text = body_bytes.decode("utf-8", errors="replace")
+    except Exception:
+        body_bytes = b""
+        body_text = ""
+
+    truncated = (body_text[:1000] + "...[truncated]") if len(body_text) > 1000 else body_text
     logger.info(
         "incoming_request",
         method=request.method,
         path=request.url.path,
-        body=request.json,
         query=str(request.url.query),
         client=request.client.host if request.client else None,
+        body=truncated,
     )
-    response = await call_next(request)
+
+    # Replay the body for downstream handlers
+    async def _receive() -> dict:
+        return {"type": "http.request", "body": body_bytes, "more_body": False}
+
+    new_request = Request(request.scope, _receive)
+    response = await call_next(new_request)
     response.headers["X-Request-ID"] = request_id
+
     logger.info(
         "request_completed",
         method=request.method,
         path=request.url.path,
-        body=request.json,
         status_code=response.status_code,
     )
     return response
