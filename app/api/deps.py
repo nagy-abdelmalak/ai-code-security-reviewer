@@ -78,18 +78,19 @@ def require_role(*allowed_roles: Role):
         return user
     return checker
 
-def get_analysis_service(session: Session = Depends(get_session)) -> AnalysisService:
+def get_analysis_service(
+        session: Session = Depends(get_session), 
+        run_llm: bool = False
+    ) -> AnalysisService:
     """
     Factory dependency that automatically constructs the AnalysisService 
     with its full structural tree pre-assembled.
     """
-    repo = SubmissionRepository(session)
+    analyzers = [SemgrepAnalyzer()]
+    if run_llm:
+        analyzers.append(LLMAnalyzer())
 
-    analyzers = [
-        SemgrepAnalyzer(),
-        LLMAnalyzer()
-    ]
-    
+    repo = SubmissionRepository(session)    
     orchestrator = AnalysisOrchestrator(session=session, analyzers=analyzers)
 
     return AnalysisService(
