@@ -11,7 +11,16 @@
 
     <form method="post" action="/web/submit" id="submit-form">
         <label for="code">Paste your Python code</label>
-        <textarea name="code" id="code" placeholder="# Paste your Python code here...">{{ code or '' }}</textarea>
+
+        <div class="code-editor">
+            <div class="line-numbers" id="line-numbers"></div>
+            <textarea 
+                name="code" 
+                id="code" 
+                placeholder="# Paste your Python code here..."
+                spellcheck="false"
+            >{{ code or '' }}</textarea>
+        </div>
 
         <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:16px;">
             ⚠️ <b>Disable LLM analysis for confidential code</b>
@@ -58,12 +67,44 @@
 
 {% block scripts %}
 <script>
-    // Toggle LLM options visibility
+    // --- Line numbers ---
+    const textarea = document.getElementById('code');
+    const lineNumbers = document.getElementById('line-numbers');
+
+    function updateLineNumbers() {
+        const lines = textarea.value.split('\n');
+        lineNumbers.innerHTML = lines
+            .map((_, i) => `<span>${i + 1}</span>`)
+            .join('');
+    }
+
+    // Sync scroll between textarea and line numbers
+    textarea.addEventListener('scroll', function() {
+        lineNumbers.scrollTop = textarea.scrollTop;
+    });
+
+    textarea.addEventListener('input', updateLineNumbers);
+    textarea.addEventListener('keydown', function(e) {
+        // Tab key inserts 4 spaces instead of changing focus
+        if (e.key === 'Tab') {
+            e.preventDefault();
+            const start = this.selectionStart;
+            const end = this.selectionEnd;
+            this.value = this.value.substring(0, start) + '    ' + this.value.substring(end);
+            this.selectionStart = this.selectionEnd = start + 4;
+            updateLineNumbers();
+        }
+    });
+
+    // Initial render
+    updateLineNumbers();
+
+    // --- LLM options toggle ---
     document.getElementById('run_llm').addEventListener('change', function() {
         document.getElementById('llm-options').style.display = this.checked ? 'block' : 'none';
     });
 
-    // Loading state on submit
+    // --- Loading state ---
     document.getElementById('submit-form').addEventListener('submit', function() {
         const btn = document.getElementById('analyze-btn');
         const loading = document.getElementById('loading');

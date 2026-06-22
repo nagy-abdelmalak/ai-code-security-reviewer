@@ -226,7 +226,7 @@ async def results_page(
 
     return templates.TemplateResponse(
         request, "results.html",
-        {
+        context={
             "request": request,
             "token": True,
             "submission": {
@@ -234,6 +234,7 @@ async def results_page(
                 "language": submission.language,
                 "created_at": submission.created_at.isoformat(),
             },
+            "code_lines": submission.code.splitlines(),
             "analyses": analyses,
         },
     )

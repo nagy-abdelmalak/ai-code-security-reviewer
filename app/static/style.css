@@ -283,3 +283,103 @@ th {
 @keyframes spin {
     to { transform: rotate(360deg); }
 }
+
+/* Code editor with line numbers */
+.code-editor {
+    display: flex;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    margin-bottom: 12px;
+    overflow: hidden;
+}
+
+.line-numbers {
+    padding: 10px 8px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    text-align: right;
+    user-select: none;
+    overflow: hidden;
+    min-width: 40px;
+}
+
+.line-numbers span {
+    display: block;
+    font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    color: var(--text-muted);
+}
+
+.code-editor textarea {
+    flex: 1;
+    border: none;
+    border-radius: 0;
+    margin: 0;
+    padding: 10px 12px;
+    font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    resize: vertical;
+    min-height: 300px;
+    background: var(--bg);
+    color: var(--text);
+    outline: none;
+    tab-size: 4;
+}
+
+.code-editor textarea:focus {
+    border: none;
+}
+
+/* Code viewer (results page) */
+.code-viewer {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    max-height: 400px;
+    overflow-y: auto;
+    font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.85rem;
+}
+
+.code-line {
+    display: flex;
+    line-height: 1.5;
+    transition: background 0.2s;
+}
+
+.code-line:hover {
+    background: rgba(99, 102, 241, 0.05);
+}
+
+.code-line.highlighted {
+    background: rgba(239, 68, 68, 0.15);
+    border-left: 3px solid var(--danger);
+}
+
+.code-line-number {
+    min-width: 40px;
+    padding: 0 8px;
+    text-align: right;
+    color: var(--text-muted);
+    user-select: none;
+    border-right: 1px solid var(--border);
+    background: var(--surface);
+}
+
+.code-line-content {
+    padding: 0 12px;
+    white-space: pre;
+}
+
+.finding-line-link {
+    color: var(--accent);
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.finding-line-link:hover {
+    text-decoration: underline;
+}

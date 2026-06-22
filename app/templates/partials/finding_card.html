@@ -2,7 +2,11 @@
     <div class="finding-header">
         <div>
             <span class="severity severity-{{ finding.severity }}">{{ finding.severity }}</span>
-            <span class="line-number">Line {{ finding.line_number }}</span>
+            <a href="#line-{{ finding.line_number }}" 
+               class="finding-line-link line-number" 
+               data-line="{{ finding.line_number }}">
+                Line {{ finding.line_number }} ↗
+            </a>
         </div>
         <span class="status-badge status-{{ finding.status }}">{{ finding.status }}</span>
     </div>
