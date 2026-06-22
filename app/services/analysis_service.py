@@ -182,7 +182,6 @@ class AnalysisService:
             code: str,
             language: str,
             user: User,
-            run_llm: bool = False,
             explanation_enabled: bool = False
     ):
         """
@@ -199,7 +198,6 @@ class AnalysisService:
             # Step 2: Delegate parallel analyzers execution to the orchestrator
             analysis_records = await self.orchestrator.run_pipeline(
                 submission=submission,
-                run_llm=run_llm,
                 explanation_enabled=explanation_enabled
             )
 
