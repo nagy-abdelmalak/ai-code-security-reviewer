@@ -156,12 +156,13 @@ async def submit_code(
             url="/web/login", status_code=status.HTTP_303_SEE_OTHER
         )
 
-    service = get_analysis_service(session=session, run_llm=(run_llm == "true"))
+    service = get_analysis_service(session=session)
     try:
         submission, _ = await service.create_and_analyze(
             code=code,
             language="python",
             user=user,
+            run_llm=(run_llm == "true"),
             explanation_enabled=(explanation_enabled == "true")
         )
         return RedirectResponse(

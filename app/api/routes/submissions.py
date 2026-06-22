@@ -28,11 +28,12 @@ async def submit_code_for_analysis(
     Submit code for analysis. Developer only
     """
     try:
-        service = get_analysis_service(session=session, run_llm=req.run_llm)
+        service = get_analysis_service(session=session)
         submission, analyses = await service.create_and_analyze(
             code=req.code,
             language=req.language.strip().lower(),
             user=user,
+            run_llm=req.run_llm,
             explanation_enabled=req.explanation_enabled
         )
 
