@@ -39,15 +39,11 @@ class AnalysisOrchestrator:
     async def run_pipeline(
             self,
             submission: Submission,
-            run_llm: bool,
             explanation_enabled: bool
     ) -> list[Analysis]:
         """Executes all valid analyzers concurrently to save time"""
         tasks=[]
         for analyzer in self.analyzers:
-            if analyzer.type == AnalyzerType.LLM and not run_llm:
-                continue
-
             # schedule the task for parallel execution
             tasks.append(
                 self._run_analyzer(
