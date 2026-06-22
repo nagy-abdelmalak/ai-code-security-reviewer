@@ -9,7 +9,7 @@
     <div class="alert alert-error">{{ error }}</div>
     {% endif %}
 
-    <form method="post" action="/web/submit">
+    <form method="post" action="/web/submit" id="submit-form">
         <label for="code">Paste your Python code</label>
         <textarea name="code" id="code" placeholder="# Paste your Python code here...">{{ code or '' }}</textarea>
 
@@ -18,12 +18,82 @@
             <label for="run_llm" style="margin:0;">Run LLM analysis (sends code to external provider)</label>
         </div>
 
+        <div id="llm-options" style="display:none; margin-left:24px; margin-bottom:12px;">
+            <label for="llm_model">LLM Model</label>
+            <select name="llm_model" id="llm_model">
+                {% for model in llm_models %}
+                <option value="{{ model.value }}">{{ model.label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
         <div class="toggle-group">
             <input type="checkbox" name="explanation_enabled" id="explanation_enabled" value="true">
             <label for="explanation_enabled" style="margin:0;">Include plain-language explanations</label>
         </div>
 
-        <button type="submit" class="btn btn-primary">Analyze</button>
+        <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:16px;">
+            ⚠️ LLM analysis transmits your code to the external provider.
+            Disable LLM analysis for confidential code.
+        </p>
+
+        <button type="submit" class="btn btn-primary" id="analyze-btn">
+            Analyze
+        </button>
+
+        <div id="loading" style="display:none; margin-top:16px;">
+            <div style="display:flex; align-items:center; gap:12px;">
+                <div class="spinner"></div>
+                <div>
+                    <p style="font-weight:500;">Analyzing your code...</p>
+                    <p style="font-size:0.8rem; color:var(--text-muted);" id="loading-status">
+                        Running Semgrep static analysis...
+                    </p>
+                </div>
+            </div>
+        </div>
     </form>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Toggle LLM options visibility
+    document.getElementById('run_llm').addEventListener('change', function() {
+        document.getElementById('llm-options').style.display = this.checked ? 'block' : 'none';
+    });
+
+    // Loading state on submit
+    document.getElementById('submit-form').addEventListener('submit', function() {
+        const btn = document.getElementById('analyze-btn');
+        const loading = document.getElementById('loading');
+        const status = document.getElementById('loading-status');
+        const isLLM = document.getElementById('run_llm').checked;
+
+        btn.disabled = true;
+        btn.textContent = 'Analyzing...';
+        loading.style.display = 'block';
+
+        const messages = isLLM
+            ? [
+                "Running Semgrep static analysis...",
+                "Scanning for security vulnerabilities...",
+                "Waiting for LLM response...",
+                "Comparing findings from both analyzers...",
+                "Almost there..."
+            ]
+            : [
+                "Running Semgrep static analysis...",
+                "Scanning for security vulnerabilities...",
+                "Processing findings...",
+                "Almost there..."
+            ];
+
+        let i = 0;
+        setInterval(function() {
+            i = Math.min(i + 1, messages.length - 1);
+            status.textContent = messages[i];
+        }, 4000);
+    });
+</script>
 {% endblock %}
