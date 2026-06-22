@@ -10,7 +10,7 @@ from app.models import Role, User
 from app.core.config import settings
 from app.db.session import init_db, engine
 from app.core.logging import configure_logging, get_logger
-from app.api.routes import admin, auth, submissions, reviews, export
+from app.api.routes import admin, auth, submissions, reviews, export, web
 from app.core.security import hash_password
 
 configure_logging()
@@ -66,6 +66,7 @@ app.include_router(admin.router)
 app.include_router(submissions.router)
 app.include_router(reviews.router)
 app.include_router(export.router)
+app.include_router(web.router)
 
 @app.middleware("http")
 async def add_request_id(request: Request, call_next):
