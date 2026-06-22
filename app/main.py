@@ -91,8 +91,21 @@ async def add_request_id(request: Request, call_next):
         method=request.method,
         path=request.url.path,
     )
+    logger.info(
+        "incoming_request",
+        method=request.method,
+        path=request.url.path,
+        query=str(request.url.query),
+        client=request.client.host if request.client else None,
+    )
     response = await call_next(request)
     response.headers["X-Request-ID"] = request_id
+    logger.info(
+        "request_completed",
+        method=request.method,
+        path=request.url.path,
+        status_code=response.status_code,
+    )
     return response
 
 # --- Health / Root ---
