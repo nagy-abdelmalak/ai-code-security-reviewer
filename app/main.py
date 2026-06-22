@@ -95,6 +95,7 @@ async def add_request_id(request: Request, call_next):
         "incoming_request",
         method=request.method,
         path=request.url.path,
+        body=request.json,
         query=str(request.url.query),
         client=request.client.host if request.client else None,
     )
@@ -104,6 +105,7 @@ async def add_request_id(request: Request, call_next):
         "request_completed",
         method=request.method,
         path=request.url.path,
+        body=request.json,
         status_code=response.status_code,
     )
     return response

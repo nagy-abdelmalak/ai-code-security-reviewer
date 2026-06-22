@@ -1,14 +1,14 @@
 import json
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import Response
 from sqlmodel import Session, select
 
-from app.api.deps import require_role
+from app.core.security import decode_token
+from app.core.logging import get_logger
 from app.db.session import get_session
 from app.models import (
-    Role, 
     User,
     Submission,
     Analysis,
@@ -16,18 +16,45 @@ from app.models import (
     Review
 )
 
+logger = get_logger(__name__)
 router = APIRouter(prefix="/export", tags=["export"])
+
+def _get_token(request: Request) -> str | None:
+    """Read JWT from cookie"""
+    return request.cookies.get("access_token")
+
+def _get_current_user_from_cookie(request: Request, session: Session):
+    """Decode JWT from cookie, return user or None"""
+    token = _get_token(request)
+    if not token:
+        return None
+    
+    try:
+        payload = decode_token(token)
+        user_id = payload.get("sub")
+        if not user_id or payload.get("type") != "access":
+            return None
+        user = session.get(User, UUID(user_id))
+        return user if user and user.is_active else None
+    except Exception:
+        return None
 
 @router.get("/{submission_id}/json")
 def export_submission_json(
     submission_id:  UUID,
-    user: User = Depends(require_role(Role.DEVELOPER, Role.AUDITOR)),
+    request: Request,
     session: Session = Depends(get_session)
 ):
     """
     Export a submission with all analyses and findings as downloadable JSON.
     Used for thesis data analysis.
     """
+    user = _get_current_user_from_cookie(request, session)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated"
+        )
 
     submission = session.get(Submission, submission_id)
     if not submission:
