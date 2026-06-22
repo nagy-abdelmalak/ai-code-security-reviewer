@@ -34,7 +34,7 @@ def _set_token(response: Response, token: str) -> None:
 @router.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request):
     return templates.TemplateResponse(
-        "login.html", 
+        request, "login.html", 
         {"request": request, "token": None}
     )
 
@@ -49,7 +49,7 @@ async def login_submit(
     user = service.authenticate(email=email, password=password)
     if not user:
         return templates.TemplateResponse(
-            "login.html",
+            request, "login.html",
             {"request": request, 
             "error": "Invalid email or password",
             "token": None
@@ -67,7 +67,7 @@ async def login_submit(
 @router.get("/register", response_class=HTMLResponse)
 async def register_page(request: Request):
      return templates.TemplateResponse(
-        "register.html",
+        request, "register.html",
         {"request": request, "token": None}    
     )
 
@@ -85,17 +85,17 @@ async def register_submit(
         )
     except EmailAlreadyRegistered as e:
         return templates.TemplateResponse(
-            "register.html",
+            request, "register.html",
             {"request": request, "error": "Email already registered", "token": None}
         )
     except Exception as e:
         return templates.TemplateResponse(
-                "register.html",
-                {"request": request, "error": str(e), "token": None}
-            )
+            request, "register.html",
+            {"request": request, "error": str(e), "token": None}
+        )
     
     return templates.TemplateResponse(
-        "register.html",
+        request, "register.html",
         {
             "request": request,
             "success": "Account created! You can now log in.",
@@ -138,7 +138,7 @@ async def submit_page(
         )
 
     return templates.TemplateResponse(
-        "submit.html",
+        request, "submit.html",
         {"request": request, "token": True}
     )
 
@@ -175,7 +175,7 @@ async def submit_code(
     except Exception as e:
         logger.exception("web_submit_error")
         return templates.TemplateResponse(
-            "submit.html",
+            request, "submit.html",
             {"request": request, "token": True, "error": str(e), "code": code},
         )
 
@@ -192,7 +192,7 @@ async def results_page(
     submission = session.get(Submission, submission_id)
     if not submission:
         return templates.TemplateResponse(
-            "base.html",
+            request, "base.html",
             {"request": request, "token": True, "error": "Submission not found"},
         )
 
@@ -229,7 +229,7 @@ async def results_page(
         })
 
     return templates.TemplateResponse(
-        "results.html",
+        request, "results.html",
         {
             "request": request,
             "token": True,
@@ -258,7 +258,7 @@ async def history_page(
     ).all()
 
     return templates.TemplateResponse(
-        "history.html",
+        request, "history.html",
         {
             "request": request,
             "token": True,
