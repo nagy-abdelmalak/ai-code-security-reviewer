@@ -162,7 +162,6 @@ async def submit_code(
             code=code,
             language="python",
             user=user,
-            run_llm=(run_llm == "true"),
             explanation_enabled=(explanation_enabled == "true")
         )
         return RedirectResponse(
