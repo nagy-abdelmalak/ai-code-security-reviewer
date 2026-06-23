@@ -62,7 +62,7 @@ class LLMAnalyzer:
     
     @property
     def name(self) -> str:
-        return self.provider
+        return f"{self.provider}:{self.model}"
     
     @property
     def type(self) -> AnalyzerType:
