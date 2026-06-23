@@ -20,11 +20,14 @@ logger = get_logger(__name__)
 router = APIRouter(prefix="/export", tags=["export"])
 
 def _get_token(request: Request) -> str | None:
-    """Read JWT from cookie"""
+    """Read JWT from Authorization header or cookie."""
+    auth_header = request.headers.get("Authorization")
+    if auth_header and auth_header.lower().startswith("bearer "):
+        return auth_header.split(" ", 1)[1].strip()
     return request.cookies.get("access_token")
 
-def _get_current_user_from_cookie(request: Request, session: Session):
-    """Decode JWT from cookie, return user or None"""
+def _get_current_user(request: Request, session: Session):
+    """Decode JWT from request and return user or None."""
     token = _get_token(request)
     if not token:
         return None
@@ -49,7 +52,7 @@ def export_submission_json(
     Export a submission with all analyses and findings as downloadable JSON.
     Used for thesis data analysis.
     """
-    user = _get_current_user_from_cookie(request, session)
+    user = _get_current_user(request, session)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
