@@ -57,6 +57,12 @@ class AnalysisOrchestrator:
                 )
             )
 
+            logger.info(
+                f"{analyzer.name}_task_added",
+                type=analyzer.type,
+                version=analyzer.version
+            )
+
         # Fire all analyzer executions together
         return await asyncio.gather(*tasks)
     
