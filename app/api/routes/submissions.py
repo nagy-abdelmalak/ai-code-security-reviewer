@@ -22,13 +22,13 @@ logger = get_logger(__name__)
 async def submit_code_for_analysis(
     req: SubmissionRequest, 
     user: User = Depends(require_role(Role.DEVELOPER)),
-    session: Session = Depends(get_session)
+    session: Session = Depends(get_session),
+    service: AnalysisService = Depends(get_analysis_service)
 ):
     """
     Submit code for analysis. Developer only
     """
     try:
-        service = get_analysis_service(session=session)
         submission, analyses = await service.create_and_analyze(
             code=req.code,
             language=req.language.strip().lower(),
