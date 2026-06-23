@@ -63,13 +63,14 @@ class SemgrepAnalyzer:
             raw_process = await asyncio.create_subprocess_exec(
                 "semgrep",
                 "scan",
-                "--config", settings.SEMGREP_RULESET,
-                "--timeout=0",
-                "--max-target-bytes=0",  # Added missing comma here
+                "--config", "p/python" #settings.SEMGREP_RULESET,
+                "--config", "p/security-audit",
+                # "--timeout=0",
+                # "--max-target-bytes=0",  # Added missing comma here
                 "--json",
                 "--quiet",              # Forces clean JSON output, suppresses banners
-                "--error",              # Exits with 0 even if vulnerabilities are found
-                "--metrics=off",
+                # "--error",              # Exits with 0 even if vulnerabilities are found
+                # "--metrics=off",
                 str(filepath),
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
@@ -96,20 +97,20 @@ class SemgrepAnalyzer:
         except asyncio.TimeoutError:
             logger.warning("semgrep_timeout", timeout=settings.SEMGREP_TIMEOUT)
             return AnalysisResult(
-                status=False,
+                status=AnalysisStatus.ERROR,
                 error_message=f"Semgrep timed out after {settings.SEMGREP_TIMEOUT}s",
             )
         except FileNotFoundError:
             logger.error("semgrep_not_installed")
             return AnalysisResult(
-                status=False,
+                status=AnalysisStatus.ERROR,
                 error_message="Semgrep is not installed on this system",
             )
         except Exception as e:
             logger.exception("semgrep_unexpected_crash")
             return AnalysisResult(
-                status=False,
-                error_message=f"Unexpected internal analyzer error: {str(e)}"
+                status=AnalysisStatus.ERROR,
+                error_message=f"Unexpected internal analyzer error: {str(e)}",
             )
         
     def _parse_output(self, raw_json: str) -> AnalysisResult:
