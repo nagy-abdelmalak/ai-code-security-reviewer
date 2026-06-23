@@ -27,7 +27,7 @@ class Settings(BaseSettings):
     DB_POOL_TIMEOUT: float = 30.0
 
     # --- Semgrep ---
-    SEMGREP_RULESET: str = "p/python"
+    SEMGREP_RULESET: str = "p/security-audit,p/sql-injection,p/python"
     SEMGREP_TIMEOUT: int = 30
     # 500 is a safe, production-grade default threshold for a single file
     MAX_FINDING_LIMIT: int = 500
