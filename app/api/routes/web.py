@@ -30,6 +30,13 @@ def _set_token(response: Response, token: str) -> None:
             max_age=1800,  # 30 min
         )
 
+def _base_context(request: Request, token: bool = False, **extra) -> dict:
+    return {
+        "token": token,
+        # "accent_color": settings.ui_accent_color,
+        **extra,
+    }
+
 # ---- Auth pages ----
 @router.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request):
@@ -155,8 +162,15 @@ async def submit_code(
         return RedirectResponse(
             url="/web/login", status_code=status.HTTP_303_SEE_OTHER
         )
+    
+    # Read selected LLM models from multi-select checkboxes
+    form_data = await request.form()
+    selected_llms = list(form_data.getlist("llm_models"))
 
-    service = get_analysis_service(session=session)
+    service = get_analysis_service(
+        session=session,
+        selected_llms = selected_llms if run_llm == "ture" else []
+    )
     try:
         submission, _ = await service.create_and_analyze(
             code=code,
