@@ -50,7 +50,8 @@ class LLMAnalyzer:
             model=self.model,
             model_provider=self.provider.value,
             api_key=self._api_key,
-            temperature=self.temperature
+            temperature=self.temperature,
+            max_tokens=4096
         )
 
         # Load prompt template
@@ -131,27 +132,55 @@ class LLMAnalyzer:
                 error_message=f"LLM analysis failed: {str(e)}",
                 duration_ms=elapsed,
             )
-    
     def _parse_response(
         self, raw_text: str, explanation_enabled: bool
     ) -> list[AnalyzerFinding]:
-        """Parse LLM JSON response into AnalyzerFindings"""
+        """Parse LLM JSON response into AnalyzerFindings."""
         if not raw_text:
             return []
 
-        # 1. Regex to locate the outermost JSON array structure safely
-        # This ignores any prefix (like ```json) and any trailing conversational text.
-        match = re.search(r"\[.*\]", raw_text, re.DOTALL)
-        if not match:
-            logger.warning("llm_no_json_array_found", raw_text=raw_text[:200])
-            return []
+        cleaned = raw_text.strip()
 
-        cleaned = match.group(0).strip()
+        # 1. Strip <think>...</think> tags FIRST (reasoning models like Qwen)
+        if "<think>" in cleaned:
+            think_end = cleaned.find("</think>")
+            if think_end != -1:
+                cleaned = cleaned[think_end + len("</think>"):].strip()
+            else:
+                # Unclosed <think> tag — take everything after it
+                think_start = cleaned.find("<think>")
+                cleaned = cleaned[think_start:]
+                # Try to find JSON after the incomplete thinking
+                bracket_pos = cleaned.rfind("[")
+                if bracket_pos != -1:
+                    cleaned = cleaned[bracket_pos:]
+                else:
+                    logger.warning("llm_no_json_after_think", raw_text=cleaned[:200])
+                    return []
 
+        # 2. Strip markdown fences
+        if cleaned.startswith("```"):
+            cleaned = cleaned.split("\n", 1)[1] if "\n" in cleaned else cleaned
+        if cleaned.endswith("```"):
+            cleaned = cleaned.rsplit("```", 1)[0]
+        cleaned = cleaned.strip()
+
+        # 3. Try to find complete JSON array
+        match = re.search(r"\[.*\]", cleaned, re.DOTALL)
+        if match:
+            cleaned = match.group(0).strip()
+        else:
+            # 4. Handle truncated JSON — try to repair by closing brackets
+            if cleaned.startswith("["):
+                cleaned = self._repair_truncated_json(cleaned)
+            else:
+                logger.warning("llm_no_json_array_found", raw_text=cleaned[:200])
+                return []
+
+        # 5. Parse JSON
         try:
             data = json.loads(cleaned)
         except json.JSONDecodeError as e:
-            # Include the exception error details for clearer local debugging
             logger.warning("llm_parse_error", error=str(e), cleaned_text=cleaned[:200])
             return []
 
@@ -159,11 +188,11 @@ class LLMAnalyzer:
             logger.warning("llm_unexpected_format", type=type(data).__name__)
             return []
 
+        # 6. Map to findings
         findings = []
         for item in data:
             if not isinstance(item, dict):
                 continue
-
             severity_str = item.get("severity", "low").lower()
             findings.append(
                 AnalyzerFinding(
@@ -176,5 +205,80 @@ class LLMAnalyzer:
                     ),
                 )
             )
-
         return findings
+
+
+    def _repair_truncated_json(self, text: str) -> str:
+        """
+        Attempt to repair truncated JSON array by finding the last complete object.
+        
+        Example: '[{"a":1},{"b":2},{"c":3' → '[{"a":1},{"b":2}]'
+        """
+        # Find the last complete object (last '}' followed by nothing valid)
+        last_complete = text.rfind("}")
+        if last_complete == -1:
+            return "[]"
+
+        # Take everything up to and including the last complete '}'
+        repaired = text[:last_complete + 1]
+
+        # Remove trailing comma if present
+        repaired = repaired.rstrip().rstrip(",")
+
+        # Close the array
+        repaired += "]"
+
+        logger.info("llm_json_repaired", original_length=len(text), repaired_length=len(repaired))
+        return repaired
+    # def _parse_response(
+    #     self, raw_text: str, explanation_enabled: bool
+    # ) -> list[AnalyzerFinding]:
+    #     """Parse LLM JSON response into AnalyzerFindings"""
+    #     if not raw_text:
+    #         return []
+        
+    #     # 1. Regex to locate the outermost JSON array structure safely
+    #     # This ignores any prefix (like ```json) and any trailing conversational text.
+    #     match = re.search(r"\[.*\]", raw_text, re.DOTALL)
+    #     if not match:
+    #         logger.warning("llm_no_json_array_found", raw_text=raw_text[:200])
+    #         return []
+
+    #     cleaned = match.group(0).strip()
+
+    #     # Strip <think>...</think> tags
+    #     if "<think>" in cleaned:
+    #         think_end = cleaned.find("</think>")
+    #     if think_end != -1:
+    #         cleaned = cleaned[think_end + len("</think>"):].strip()
+
+    #     try:
+    #         data = json.loads(cleaned)
+    #     except json.JSONDecodeError as e:
+    #         # Include the exception error details for clearer local debugging
+    #         logger.warning("llm_parse_error", error=str(e), cleaned_text=cleaned[:200])
+    #         return []
+
+    #     if not isinstance(data, list):
+    #         logger.warning("llm_unexpected_format", type=type(data).__name__)
+    #         return []
+
+    #     findings = []
+    #     for item in data:
+    #         if not isinstance(item, dict):
+    #             continue
+
+    #         severity_str = item.get("severity", "low").lower()
+    #         findings.append(
+    #             AnalyzerFinding(
+    #                 severity=_SEVERITY_MAP.get(severity_str, Severity.LOW),
+    #                 line_number=item.get("line_number", 0),
+    #                 rule_id=item.get("rule_id", "llm-finding"),
+    #                 message=item.get("message", "No description"),
+    #                 explanation=(
+    #                     item.get("explanation") if explanation_enabled else None
+    #                 ),
+    #             )
+    #         )
+
+    #     return findings
