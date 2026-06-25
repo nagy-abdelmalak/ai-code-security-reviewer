@@ -12,3 +12,4 @@ If no vulnerabilities are found, return an empty JSON array: []
 Respond ONLY with the JSON array. No markdown, no backticks, no commentary.
 
 CODE:
+{code}
