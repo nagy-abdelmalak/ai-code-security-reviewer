@@ -5,7 +5,7 @@ from jwt.exceptions import PyJWTError
 from sqlmodel import Session
 
 from app.models import Role, User
-from app.core.config import settings
+from app.core.config import settings, LLM_AVAILABLE_MODELS
 from app.core.security import decode_token
 from app.db.session import get_session
 from app.core.logging import get_logger
@@ -33,12 +33,12 @@ def _build_sast_analyzers() -> list[Analyzer]:
             except Exception as e:
                 logger.warning("sast_analyzer_failed", name="semgrep", error=str(e))
 
-        # elif name == "bandit":
-        #     try:
-        #         analyzers.append(BanditAnalyzer())
-        #         logger.info("sast_analyzer_loaded", name="bandit")
-        #     except Exception as e:
-        #         logger.warning("sast_analyzer_failed", name="bandit", error=str(e))
+        elif name == "bandit":
+            try:
+                analyzers.append(BanditAnalyzer())
+                logger.info("sast_analyzer_loaded", name="bandit")
+            except Exception as e:
+                logger.warning("sast_analyzer_failed", name="bandit", error=str(e))
 
         # elif name == "opengrep":
         #     try:
@@ -60,11 +60,12 @@ def _build_llm_analyzers(selected_models: list[str] | None = None) -> list[Analy
                      If None, uses all configured in LLM_MODELS.
                      If empty list, returns no LLM analyzers.
     """
-    available_models = settings.get_available_models()
+    available_models = LLM_AVAILABLE_MODELS
     if not available_models:
         return []
 
     # Filter to user selection if provided
+    models = []
     if selected_models is not None:
         models = [m for m in selected_models if m in available_models]
 
