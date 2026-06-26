@@ -74,7 +74,7 @@ class Settings(BaseSettings):
 
     # --- LLM API keys ---
     GROQ_API_KEY: str = ""
-    GEMINI_API_KEY: str = ""
+    GOOGLE_API_KEY: str = ""
     OPENROUTER_API_KEY: str = ""
     OPENAI_API_KEY: str = ""
     ANTHROPIC_API_KEY: str = ""
@@ -83,7 +83,7 @@ class Settings(BaseSettings):
         """Return the API key for a given provider. Empty string if not set."""
         provider_keys = {
             "groq": self.GROQ_API_KEY,
-            "gemini": self.GEMINI_API_KEY,
+            "google": self.GOOGLE_API_KEY,
             "openrouter": self.OPENROUTER_API_KEY,
             "openai": self.OPENAI_API_KEY,
             "anthropic": self.ANTHROPIC_API_KEY,
