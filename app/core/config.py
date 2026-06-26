@@ -104,7 +104,7 @@ class Settings(BaseSettings):
 
         api_key = self.get_api_key(provider)
         if not api_key:
-            return None  # caller decides whether to warn or skip
+            raise ValueError(f"No API key configured for provider '{provider}'")
 
         return LLMConfig(
             provider=provider,

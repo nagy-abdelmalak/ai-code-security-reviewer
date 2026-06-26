@@ -72,11 +72,11 @@ def _build_llm_analyzers(selected_models: list[str] | None = None) -> list[Analy
     analyzers = []
     for model in models:
         config = settings.get_llm_config(model)
-        if not config.api_key:
+        if config is None:  # ← check None BEFORE accessing attributes
             logger.warning(
                 "llm_analyzer_skipped",
                 reason="no_api_key",
-                model=config.model,
+                model=model
             )
             continue
         try:
