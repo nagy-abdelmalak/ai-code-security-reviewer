@@ -7,7 +7,7 @@ from sqlmodel import Session, select
 from app.core.logging import get_logger
 from app.core.templates import templates
 from app.core.security import decode_token
-from app.core.config import settings
+from app.core.config import settings, LLM_AVAILABLE_MODELS
 from app.models import User, Submission, Analysis, Finding
 from app.api.deps import get_analysis_service
 from app.db.session import get_session
@@ -150,7 +150,7 @@ async def submit_page(
         context= _base_context(
             request, 
             token=True,
-            llm_models = settings.LLM_AVAILABLE_MODELS,
+            llm_models = LLM_AVAILABLE_MODELS,
             sast_analyzers = settings.get_sast_analyzers
         )
     )

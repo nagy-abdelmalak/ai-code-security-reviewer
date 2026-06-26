@@ -4,6 +4,15 @@ from dataclasses import dataclass
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+LLM_AVAILABLE_MODELS: tuple[str, ...] = (
+    "groq:qwen/qwen3.6-27b",
+    "groq:llama-3.3-70b-versatile",
+    "openrouter:qwen/qwen3-coder:free",
+    "openrouter:openai/gpt-oss-20b:free",
+    "openrouter:nvidia/nemotron-3-super-120b-a12b:free",
+    "google:gemini-3.5-flash"
+)
+
 @dataclass
 class LLMConfig:
    """Class to hold specific LLM configurations"""
@@ -62,14 +71,6 @@ class Settings(BaseSettings):
     Comma-separated "provider:model" pairs.
     These appear in the UI dropdown and are selectable by the user.
     """
-    LLM_AVAILABLE_MODELS: tuple[str] = (
-        "groq:qwen/qwen3.6-27b",
-        "groq:llama-3.3-70b-versatile",
-        "openrouter:qwen/qwen3-coder:free",
-        "openrouter:openai/gpt-oss-20b:free",
-        "openrouter:nvidia/nemotron-3-super-120b-a12b:free",
-        "google:gemini-3.5-flash"
-    )
 
     # --- LLM API keys ---
     GROQ_API_KEY: str = ""
@@ -77,11 +78,6 @@ class Settings(BaseSettings):
     OPENROUTER_API_KEY: str = ""
     OPENAI_API_KEY: str = ""
     ANTHROPIC_API_KEY: str = ""
-
-    # --- LLM defaults ---
-    LLM_TEMPERATURE: float = 0.0
-    LLM_MAX_TOKENS: int = 4096
-    LLM_PROMPT_VERSION: str = "v1"
 
     def get_api_key(self, provider: str) -> str:
         """Return the API key for a given provider. Empty string if not set."""
@@ -113,8 +109,7 @@ class Settings(BaseSettings):
         return LLMConfig(
             provider=provider,
             model=model,
-            api_key=api_key,
-            temperature=self.LLM_TEMPERATURE,
+            api_key=api_key
         )
 
     def get_sast_analyzers(self) -> list[str]:
