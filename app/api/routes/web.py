@@ -172,11 +172,11 @@ async def submit_code(
     form_data = await request.form()
     selected_llms = list(form_data.getlist("llm_models"))
 
-    service = get_analysis_service(
-        session=session,
-        selected_llms = selected_llms
-    )
     try:
+        service = get_analysis_service(
+            session=session,
+            selected_llms = selected_llms
+        )
         submission, _ = await service.create_and_analyze(
             code=code,
             language="python",
