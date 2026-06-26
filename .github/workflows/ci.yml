@@ -28,7 +28,7 @@ jobs:
 
       - name: Run test
         env: 
-          JWT_SECRET: ci-test-secret-that-is-at-least-32-bytes-long-for-hmac
+          JWT_SECRET_KEY: ci-test-secret-that-is-at-least-32-bytes-long-for-hmac
           INITIAL_ADMIN_EMAIL: admin@test.local
           INITIAL_ADMIN_PASSWORD: test_password
           DATABASE_URL: sqlite:///./test.db
