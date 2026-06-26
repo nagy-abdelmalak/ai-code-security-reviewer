@@ -45,7 +45,7 @@
             <label for="llm_model">LLM Model</label>
             <select name="llm_model" id="llm_model">
                 {% for model in llm_models %}
-            <input type="checkbox" name="llm_models" value="{{ model.model }}">
+            <input type="checkbox" name="llm_models" value="{{ model }}">
             <label>{{ model.label }}</label>
             {% endfor %}
             </select>

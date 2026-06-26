@@ -60,35 +60,31 @@ def _build_llm_analyzers(selected_models: list[str] | None = None) -> list[Analy
                      If None, uses all configured in LLM_MODELS.
                      If empty list, returns no LLM analyzers.
     """
-    all_configs = settings.get_llm_configs()
-    if not all_configs:
+    available_models = settings.get_available_models()
+    if not available_models:
         return []
 
     # Filter to user selection if provided
     if selected_models is not None:
-        all_configs = [c for c in all_configs if c["value"] in selected_models]
+        models = [m for m in selected_models if m in available_models]
 
     analyzers = []
-    for config in all_configs:
-        if not config["api_key"]:
+    for model in available_models:
+        config = settings.get_llm_config(model)
+        if not config.api_key:
             logger.warning(
                 "llm_analyzer_skipped",
                 reason="no_api_key",
-                model=config["value"],
+                model=config.model,
             )
             continue
         try:
-            analyzers.append(LLMAnalyzer(
-                provider=config["provider"],
-                model=config["model"],
-                api_key=config["api_key"],
-                prompt_version=settings.LLM_PROMPT_VERSION,
-            ))
-            logger.info("llm_analyzer_loaded", model=config["value"])
+            analyzers.append(LLMAnalyzer(llm_config=config))
+            logger.info("llm_analyzer_loaded", model=config.model)
         except Exception as e:
             logger.warning(
                 "llm_analyzer_failed",
-                model=config["value"],
+                model=config.model,
                 error=str(e),
             )
 
@@ -153,13 +149,23 @@ def require_role(*allowed_roles: Role):
         return user
     return checker
 
-def get_analysis_service(session: Session = Depends(get_session)) -> AnalysisService:
+def get_analysis_service(
+    session: Session = Depends(get_session),
+    selected_llms: list[str] | None = None
+) -> AnalysisService:
     """
-    Factory dependency that automatically constructs the AnalysisService 
-    with its full structural tree pre-assembled.
+    Build AnalysisService with all available analyzers.
+
+    SAST analyzers: always all enabled ones from config.
+    LLM analyzers: filtered by user selection if provided.
+    Which analyzers actually RUN is decided by the orchestrator
+    based on run_llm flag.
     """
-    repo = SubmissionRepository(session)   
-    analyzers = [SemgrepAnalyzer(), LLMAnalyzer()] 
+    sast_analyzers = _build_sast_analyzers()
+    llm_analyzers = _build_llm_analyzers(selected_models=selected_llms)
+    analyzers = sast_analyzers + llm_analyzers
+
+    repo = SubmissionRepository(session)
     orchestrator = AnalysisOrchestrator(session=session, analyzers=analyzers)
 
     return AnalysisService(

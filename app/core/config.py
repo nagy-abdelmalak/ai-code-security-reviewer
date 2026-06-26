@@ -7,10 +7,12 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 @dataclass
 class LLMConfig:
    """Class to hold specific LLM configurations"""
+   prompt_version: str = "v1"
    provider: str
    model: str
    api_key: str
    temperature: float = 0.0  # For highly deterministic LLMs
+   max_tokens: int = 4096
 
 class Settings(BaseSettings):
     # --- How Pydantic loads this ---
@@ -114,20 +116,16 @@ class Settings(BaseSettings):
             temperature=self.LLM_TEMPERATURE,
         )
 
-    def get_available_models(self) -> list[LLMConfig]:
+    def get_available_models(self) -> list[str]:
         """
-        Return all LLMConfigs that have a valid API key.
-        Used to populate the UI dropdown — only shows models the user can actually run.
+        Return all available models to populate the UI dropdown.
         """
-        configs = []
-        for entry in self.LLM_AVAILABLE_MODELS.split(","):
-            entry = entry.strip()
-            if not entry:
-                continue
-            config = self.get_llm_config(entry)
-            if config:
-                configs.append(config)
-        return configs
+        models = []
+        for model in self.LLM_AVAILABLE_MODELS.split(","):
+            model = model.strip()
+            if model:
+                models.append(model)
+        return models
 
     def get_sast_analyzers(self) -> list[str]:
         return [a.strip().lower() for a in self.ENABLED_SAST_ANALYZERS.split(",") if a.strip()]

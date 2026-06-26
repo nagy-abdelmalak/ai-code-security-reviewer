@@ -1,0 +1,61 @@
+rules:
+  - id: python-hardcoded-secret
+    message: "Hardcoded secret or credential detected in source code."
+    languages: [python]
+    severity: ERROR
+    tags: [security, secrets]
+    pattern-regex: "\\b(?:API_KEY|AWS_SECRET_KEY|DB_PASSWORD|PASSWORD|SECRET|TOKEN)\\s*=\\s*[\"'][^\"']+[\"']"
+
+  - id: python-path-traversal
+    message: "Path concatenation with user-controlled input can lead to path traversal."
+    languages: [python]
+    severity: WARNING
+    tags: [security, path-traversal]
+    pattern-either:
+      - pattern: open("/var/www/" + $PATH)
+      - pattern: open(os.path.join("/data/uploads", $PATH))
+      - pattern: open($BASE + $PATH)
+
+  - id: python-insecure-randomness
+    message: "Insecure use of Python random API for security-sensitive purposes."
+    languages: [python]
+    severity: WARNING
+    tags: [security, crypto]
+    pattern-regex: "\\brandom\\.(?:randint|choice|randrange|random)\\("
+
+  - id: python-ssrf
+    message: "Unvalidated request URL may lead to server-side request forgery (SSRF)."
+    languages: [python]
+    severity: ERROR
+    tags: [security, ssrf]
+    pattern-either:
+      - pattern: requests.get($URL)
+      - pattern: requests.post($URL, ...)
+      - pattern: requests.request($METHOD, $URL, ...)
+
+  - id: python-insecure-deserialization
+    message: "Dangerous deserialization using pickle or yaml.load."
+    languages: [python]
+    severity: ERROR
+    tags: [security, deserialization]
+    pattern-either:
+      - pattern: pickle.loads($DATA)
+      - pattern: yaml.load($DATA)
+
+  - id: python-eval-exec
+    message: "Dynamic code execution with eval/exec is dangerous."
+    languages: [python]
+    severity: ERROR
+    tags: [security, injection]
+    pattern-either:
+      - pattern: eval($EXPR)
+      - pattern: exec($EXPR)
+
+  - id: python-sql-injection-fstring
+    message: "String concatenation or f-string in SQL query can cause SQL injection."
+    languages: [python]
+    severity: HIGH
+    tags: [security, sql-injection]
+    pattern-either:
+      - pattern: cursor.execute(f"SELECT * FROM $TABLE WHERE $COND")
+      - pattern: cursor.execute("SELECT * FROM $TABLE WHERE $COND" + $USER_INPUT)
