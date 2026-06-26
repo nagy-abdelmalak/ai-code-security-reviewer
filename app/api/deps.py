@@ -14,7 +14,7 @@ from app.services.analysis_service import (
     SubmissionRepository,
     AnalysisService
 )
-from app.analyzers import SemgrepAnalyzer, LLMAnalyzer, Analyzer
+from app.analyzers import SemgrepAnalyzer, LLMAnalyzer, Analyzer, BanditAnalyzer
 
 logger = get_logger(__name__)
 
