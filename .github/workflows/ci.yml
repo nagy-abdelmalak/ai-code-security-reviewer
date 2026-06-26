@@ -28,8 +28,10 @@ jobs:
 
       - name: Run test
         env: 
-          JWT_SECRET: test-secret
+          JWT_SECRET: ci-test-secret-that-is-at-least-32-bytes-long-for-hmac
           INITIAL_ADMIN_EMAIL: admin@test.local
           INITIAL_ADMIN_PASSWORD: test_password
           DATABASE_URL: sqlite:///./test.db
+          ENVIRONMENT: test
+          ENABLED_SAST_ANALYZERS: semgrep,bandit
         run: uv run pytest -v 
