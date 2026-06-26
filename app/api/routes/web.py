@@ -150,7 +150,7 @@ async def submit_page(
         context= _base_context(
             request, 
             token=True,
-            llm_models = settings.get_available_models,
+            llm_models = settings.LLM_AVAILABLE_MODELS,
             sast_analyzers = settings.get_sast_analyzers
         )
     )
