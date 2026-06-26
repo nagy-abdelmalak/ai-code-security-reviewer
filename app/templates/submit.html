@@ -42,6 +42,22 @@
         </div>
 
         <div id="llm-options" style="display:none; margin-left:24px; margin-bottom:12px;">
+            <label>Select LLM model(s)</label>
+            {% for model in llm_models %}
+            <div class="toggle-group" style="margin-bottom:6px;">
+                <input type="checkbox"
+                    name="llm_models"
+                    id="llm_{{ loop.index }}"
+                    value="{{ model }}"
+                    {% if loop.first %}checked{% endif %}>
+                <label for="llm_{{ loop.index }}" style="margin:0;">
+                    {{ model.split(":")[1] }}
+                </label>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- <div id="llm-options" style="display:none; margin-left:24px; margin-bottom:12px;">
             <label for="llm_model">LLM Model</label>
             <select name="llm_model" id="llm_model">
                 {% for model in llm_models %}
@@ -54,7 +70,7 @@
                 <input type="checkbox" name="explanation_enabled" id="explanation_enabled" value="true">
                 <label for="explanation_enabled" style="margin:0;">Include plain-language explanations</label>
             </div>
-        </div>
+        </div> -->
 
         <button type="submit" class="btn btn-primary" id="analyze-btn">
             Analyze

@@ -2,6 +2,196 @@
 {% block title %}Results — {{ submission.id[:8] }}{% endblock %}
 
 {% block content %}
+
+{# ─── Header ─────────────────────────────────────────────────────────── #}
+<div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px;">
+    <div>
+        <h2>Analysis Results</h2>
+        <p style="color:var(--text-muted); font-size:0.85rem; margin-top:4px;">
+            Submission {{ submission.id[:8] }}...
+            &nbsp;·&nbsp; {{ submission.language }}
+            &nbsp;·&nbsp; {{ submission.created_at[:19].replace("T", " ") }}
+        </p>
+    </div>
+    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+        {# Summary badges #}
+        {% set sast_analyses = analyses | selectattr("analyzer_type", "ne", "llm") | list %}
+        {% set llm_analyses  = analyses | selectattr("analyzer_type", "eq", "llm") | list %}
+        {% if sast_analyses %}
+        <span class="status-badge" style="background:rgba(59,130,246,0.15); color:#60a5fa;">
+            🔍 {{ sast_analyses | length }} SAST
+        </span>
+        {% endif %}
+        {% if llm_analyses %}
+        <span class="status-badge" style="background:rgba(139,92,246,0.15); color:#a78bfa;">
+            🤖 {{ llm_analyses | length }} LLM
+        </span>
+        {% endif %}
+        <a href="/export/{{ submission.id }}/json" class="btn btn-sm btn-primary">
+            Export JSON
+        </a>
+    </div>
+</div>
+
+{# ─── Submitted code ──────────────────────────────────────────────────── #}
+<div class="card" style="margin-bottom:24px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <h3 style="font-size:0.95rem;">Submitted Code</h3>
+        <span style="font-size:0.8rem; color:var(--text-muted);">
+            {{ code_lines | length }} line{{ 's' if code_lines | length != 1 }}
+        </span>
+    </div>
+    <div class="code-viewer">
+        {% for line in code_lines %}
+        <div class="code-line" id="line-{{ loop.index }}">
+            <span class="code-line-number">{{ loop.index }}</span>
+            <span class="code-line-content">{{ line }}</span>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+{# ─── No analyses ─────────────────────────────────────────────────────── #}
+{% if not analyses %}
+<div class="empty">
+    <p>No analyses found for this submission.</p>
+</div>
+
+{% else %}
+
+{# ─── Dynamic grid — 1 col for 1, 2 col for 2, stacked for 3+ ─────────── #}
+{% set count = analyses | length %}
+<div class="{% if count == 1 %}analysis-grid-1{% elif count == 2 %}analysis-grid-2{% else %}analysis-grid-n{% endif %}">
+
+    {% for analysis in analyses %}
+    <div class="analysis-panel">
+
+        {# Panel header #}
+        <div class="analysis-panel-header">
+            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                {# Icon + tool name #}
+                {% if analysis.analyzer_type == "llm" %}
+                    <span class="analyzer-badge analyzer-badge-llm">🤖 LLM</span>
+                {% elif analysis.analyzer_type == "semgrep" %}
+                    <span class="analyzer-badge analyzer-badge-sast">🔍 Semgrep</span>
+                {% elif analysis.analyzer_type == "bandit" %}
+                    <span class="analyzer-badge analyzer-badge-sast">🔍 Bandit</span>
+                {% else %}
+                    <span class="analyzer-badge analyzer-badge-sast">🔍 {{ analysis.analyzer_type | title }}</span>
+                {% endif %}
+
+                {# Model name for LLM — extracted from version field #}
+                {% if analysis.analyzer_type == "llm" and analysis.prompt_version %}
+                <span style="font-size:0.8rem; color:var(--text-muted);">
+                    {{ analysis.model_label or analysis.prompt_version }}
+                </span>
+                {% endif %}
+
+                {# Status #}
+                <span class="status-badge status-{{ analysis.status }}">
+                    {{ analysis.status }}
+                </span>
+            </div>
+
+            {# Duration + findings count #}
+            <div style="display:flex; align-items:center; gap:12px;">
+                {% if analysis.duration_ms %}
+                <span style="font-size:0.75rem; color:var(--text-muted);">
+                    {{ analysis.duration_ms }}ms
+                </span>
+                {% endif %}
+                <span class="findings-count {% if analysis.findings | length > 0 %}findings-count--has{% else %}findings-count--clean{% endif %}">
+                    {{ analysis.findings | length }} finding{{ 's' if analysis.findings | length != 1 }}
+                </span>
+            </div>
+        </div>
+
+        {# Error state #}
+        {% if analysis.error_message %}
+        <div class="alert alert-error" style="margin:12px 0 0 0;">
+            {{ analysis.error_message }}
+        </div>
+        {% endif %}
+
+        {# Findings or empty state #}
+        {% if analysis.findings | length == 0 %}
+        <div class="empty" style="padding:24px 0;">
+            {% if analysis.status == "completed" %}
+                ✅ No vulnerabilities found
+            {% elif analysis.status == "failed" %}
+                ⚠️ Analysis did not complete
+            {% else %}
+                — No findings
+            {% endif %}
+        </div>
+        {% else %}
+            {# Severity summary bar #}
+            {% set high   = analysis.findings | selectattr("severity", "eq", "high")   | list | length %}
+            {% set medium = analysis.findings | selectattr("severity", "eq", "medium") | list | length %}
+            {% set low    = analysis.findings | selectattr("severity", "eq", "low")    | list | length %}
+            <div class="severity-bar">
+                {% if high %}
+                <span class="severity-bar-item severity-high">
+                    {{ high }} HIGH
+                </span>
+                {% endif %}
+                {% if medium %}
+                <span class="severity-bar-item severity-medium">
+                    {{ medium }} MED
+                </span>
+                {% endif %}
+                {% if low %}
+                <span class="severity-bar-item severity-low">
+                    {{ low }} LOW
+                </span>
+                {% endif %}
+            </div>
+
+            {# Finding cards #}
+            <div class="findings-list">
+                {% for finding in analysis.findings %}
+                {% include "partials/finding_card.html" %}
+                {% endfor %}
+            </div>
+        {% endif %}
+
+    </div>
+    {% endfor %}
+
+</div>
+{% endif %}
+
+<div style="margin-top:24px;">
+    <a href="/web/history" style="color:var(--accent); font-size:0.9rem;">← Back to History</a>
+</div>
+
+{% endblock %}
+
+
+{% block scripts %}
+<script>
+    // Clicking a finding's line number highlights that line in the code viewer
+    document.querySelectorAll('.finding-line-link').forEach(function(link) {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            document.querySelectorAll('.code-line.highlighted').forEach(function(el) {
+                el.classList.remove('highlighted');
+            });
+            var lineEl = document.getElementById('line-' + this.dataset.line);
+            if (lineEl) {
+                lineEl.classList.add('highlighted');
+                lineEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        });
+    });
+</script>
+{% endblock %}
+
+
+<!-- {% extends "base.html" %}
+{% block title %}Results — {{ submission.id[:8] }}{% endblock %}
+
+{% block content %}
 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
     <div>
         <h2>Analysis Results</h2>
@@ -100,4 +290,4 @@
         });
     });
 </script>
-{% endblock %}
+{% endblock %} -->

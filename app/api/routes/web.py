@@ -8,7 +8,7 @@ from app.core.logging import get_logger
 from app.core.templates import templates
 from app.core.security import decode_token
 from app.core.config import settings, LLM_AVAILABLE_MODELS
-from app.models import User, Submission, Analysis, Finding
+from app.models import User, Submission, Analysis, Finding, AnalyzerType
 from app.api.deps import get_analysis_service
 from app.db.session import get_session
 from app.services.auth_service import AuthService, EmailAlreadyRegistered
@@ -209,8 +209,10 @@ async def results_page(
     submission = session.get(Submission, submission_id)
     if not submission:
         return templates.TemplateResponse(
-            request, "base.html",
-            {"request": request, "token": True, "error": "Submission not found"},
+            request, "results.html",
+            context=_base_context(request, token=True,
+                                  error="Submission not found",
+                                  analyses=[], code_lines=[]),
         )
 
     analyses_raw = session.exec(
@@ -222,15 +224,25 @@ async def results_page(
         findings = session.exec(
             select(Finding).where(Finding.analysis_id == a.id)
         ).all()
+
+        # Build a readable label for LLM analyses
+        # ruleset_version stores "provider:model" for LLM analyzers
+        model_label = None
+        if a.analyzer_type == AnalyzerType.LLM and a.ruleset_version:
+            parts = a.ruleset_version.split(":", 1)
+            if len(parts) == 2:
+                model_label = f"{parts[0].title()} — {parts[1]}"
+
         analyses.append({
             "analyzer_type": a.analyzer_type.value,
             "status": a.status.value,
+            "prompt_version": a.prompt_version,
+            "model_label": model_label,
+            "error_message": a.error_message,
             "duration_ms": (
                 int((a.completed_at - a.started_at).total_seconds() * 1000)
-                if a.completed_at and a.started_at
-                else None
+                if a.completed_at and a.started_at else None
             ),
-            "error_message": a.error_message,
             "findings": [
                 {
                     "id": str(f.id),
@@ -247,17 +259,17 @@ async def results_page(
 
     return templates.TemplateResponse(
         request, "results.html",
-        context={
-            "request": request,
-            "token": True,
-            "submission": {
+        context=_base_context(
+            request,
+            token=True,
+            submission={
                 "id": str(submission.id),
                 "language": submission.language,
                 "created_at": submission.created_at.isoformat(),
             },
-            "code_lines": submission.code.splitlines(),
-            "analyses": analyses,
-        },
+            code_lines=submission.code.splitlines(),
+            analyses=analyses,
+        ),
     )
 
 @router.get("/history", response_class=HTMLResponse)
