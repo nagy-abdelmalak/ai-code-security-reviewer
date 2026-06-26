@@ -13,7 +13,7 @@ logger = get_logger(__name__)
 
 TIMEOUT_SECONDS = 30
 
-# Map semgrep severity strings to our Severity enum
+# Map bandit severity strings to our Severity enum
 _SEVERITY_MAP = {
     "HIGH": Severity.HIGH,
     "MEDIUM": Severity.MEDIUM,
@@ -21,7 +21,7 @@ _SEVERITY_MAP = {
 }
 
 
-class SemgrepAnalyzer:
+class BanditAnalyzer:
     """
     Static analysis via bandit CE. ADR-007 defense-in-depth:
     - Static only (no code execution)
@@ -58,7 +58,7 @@ class SemgrepAnalyzer:
             delete_temp_file(filepath)
 
     async def _run_bandit(self, filepath) -> AnalysisResult:
-        """Run semgrep subprocess with timeout. ADR-007 Layer 4."""
+        """Run bandit subprocess with timeout. ADR-007 Layer 4."""
 
         # Build command with multiple rulesets from config
         args = [
