@@ -159,7 +159,6 @@ async def submit_page(
 async def submit_code(
     request: Request,
     code: str = Form(...),
-    run_llm: str = Form(default=""),
     explanation_enabled: str = Form(default=""),
     session: Session = Depends(get_session)
 ):
@@ -175,14 +174,13 @@ async def submit_code(
 
     service = get_analysis_service(
         session=session,
-        selected_llms = selected_llms if run_llm == "ture" else []
+        selected_llms = selected_llms
     )
     try:
         submission, _ = await service.create_and_analyze(
             code=code,
             language="python",
             user=user,
-            run_llm=(run_llm == "true"),
             explanation_enabled=(explanation_enabled == "true")
         )
         return RedirectResponse(

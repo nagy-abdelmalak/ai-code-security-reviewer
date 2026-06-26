@@ -76,6 +76,8 @@ class MockSemgrepAnalyzer:
 
 class MockLLMAnalyzer:
     """Fake LLM — detects hardcoded passwords and eval()."""
+    provider = "mock"      # ← add
+    model = "mock-model"   # ← add
 
     @property
     def name(self) -> str:
@@ -167,9 +169,15 @@ def client_fixture(session: Session):
     #    we replace the reference in the module where it's imported and used.
     original_factory = submissions_module.get_analysis_service
 
-    def mock_factory(session, **kwargs):
+
+    def mock_factory(session, selected_llms=None, **kwargs):
         print(">>> MOCK FACTORY CALLED <<<")
-        return _make_mock_service(session)
+        analyzers = [MockSemgrepAnalyzer()]
+        if selected_llms:  # mirrors real _build_llm_analyzers behavior
+            analyzers.append(MockLLMAnalyzer())
+        repo = SubmissionRepository(session)
+        orchestrator = AnalysisOrchestrator(analyzers=analyzers, session=session)
+        return AnalysisService(repo=repo, orchestrator=orchestrator, session=session)
 
     submissions_module.get_analysis_service = mock_factory
 

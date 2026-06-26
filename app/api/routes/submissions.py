@@ -36,7 +36,6 @@ async def submit_code_for_analysis(
             code=req.code,
             language=req.language.strip().lower(),
             user=user,
-            run_llm=req.run_llm,
             explanation_enabled=req.explanation_enabled
         )
 

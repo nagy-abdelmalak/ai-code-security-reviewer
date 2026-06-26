@@ -39,7 +39,6 @@ class AnalysisOrchestrator:
     async def run_pipeline(
             self,
             submission: Submission,
-            run_llm: bool,
             explanation_enabled: bool
     ) -> list[Analysis]:
         """
@@ -48,13 +47,8 @@ class AnalysisOrchestrator:
         2. Execute    — run analyzers in parallel (pure I/O, no DB)
         3. Persist    — save findings to DB (sequential, FK-safe)
         """
-        # Filter which analyzers to run this time
-        active = self._select_analyzers(run_llm)
-        if not active:
-            return []
-
         # Phase 1: DB writes first — guarantee analysis.id exists before findings
-        analysis_records = self._initialize_analyses(submission, active, explanation_enabled)
+        analysis_records = self._initialize_analyses(submission, self.analyzers, explanation_enabled)
 
         # Phase 2: parallel I/O — safe because zero DB access inside analyzers
         results = await self._execute_analyzers(
@@ -209,9 +203,8 @@ class AnalysisService:
             code: str,
             language: str,
             user: User,
-            run_llm: bool,
             explanation_enabled: bool = False
-    ):
+    ) -> tuple[Submission, list[Analysis]]:
         """
         Executes a pipeline submission and triggers concurrent analytics tracking
         """
@@ -226,7 +219,6 @@ class AnalysisService:
             # Step 2: Delegate parallel analyzers execution to the orchestrator
             analysis_records = await self.orchestrator.run_pipeline(
                 submission=submission,
-                run_llm=run_llm,
                 explanation_enabled=explanation_enabled
             )
 

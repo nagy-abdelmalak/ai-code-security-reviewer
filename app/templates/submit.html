@@ -37,11 +37,43 @@
         </p>
 
         <div class="toggle-group">
+            <input type="checkbox" name="run_llm_toggle" id="run_llm_toggle">
+            <label for="run_llm_toggle" style="margin:0;">
+                Run LLM analysis (sends code to external provider)
+            </label>
+        </div>
+        <!-- <div class="toggle-group">
             <input type="checkbox" name="run_llm" id="run_llm" value="true">
             <label for="run_llm" style="margin:0;">Run LLM analysis</label>
-        </div>
+        </div> -->
 
         <div id="llm-options" style="display:none; margin-left:24px; margin-bottom:12px;">
+
+            <label style="margin-bottom:8px; display:block;">Select LLM model(s)</label>
+
+            {% for model in llm_models %}
+            <div class="toggle-group" style="margin-bottom:6px;">
+                <input type="checkbox"
+                    name="llm_models"
+                    id="llm_{{ loop.index }}"
+                    value="{{ model }}"
+                    {% if loop.first %}checked{% endif %}>
+                <label for="llm_{{ loop.index }}" style="margin:0;">
+                    {{ model.split(":")[1] }}
+                </label>
+            </div>
+            {% endfor %}
+
+            <div class="toggle-group" style="margin-top:8px;">
+                <input type="checkbox" name="explanation_enabled" id="explanation_enabled" value="true">
+                <label for="explanation_enabled" style="margin:0;">
+                    Include plain-language explanations
+                </label>
+            </div>
+
+        </div>
+
+        <!-- <div id="llm-options" style="display:none; margin-left:24px; margin-bottom:12px;">
             <label>Select LLM model(s)</label>
             {% for model in llm_models %}
             <div class="toggle-group" style="margin-bottom:6px;">
@@ -55,7 +87,7 @@
                 </label>
             </div>
             {% endfor %}
-        </div>
+        </div> -->
 
         <!-- <div id="llm-options" style="display:none; margin-left:24px; margin-bottom:12px;">
             <label for="llm_model">LLM Model</label>
@@ -126,10 +158,24 @@
     updateLineNumbers();
 
     // --- LLM options toggle ---
-    document.getElementById('run_llm').addEventListener('change', function() {
-        document.getElementById('llm-options').style.display = this.checked ? 'block' : 'none';
-    });
+    const toggle = document.getElementById('run_llm_toggle');
+    const llmOptions = document.getElementById('llm-options');
 
+    toggle.addEventListener('change', function() {
+        llmOptions.style.display = this.checked ? 'block' : 'none';
+
+        // When hiding, uncheck all model checkboxes so nothing is sent
+        if (!this.checked) {
+            llmOptions.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                cb.checked = false;
+            });
+        } else {
+            // When showing, re-check the first model by default
+            const first = llmOptions.querySelector('input[name="llm_models"]');
+            if (first) first.checked = true;
+        }
+    });
+    
     // --- Loading state ---
     document.getElementById('submit-form').addEventListener('submit', function() {
         const btn = document.getElementById('analyze-btn');

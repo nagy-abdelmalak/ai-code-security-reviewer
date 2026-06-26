@@ -160,7 +160,7 @@ def get_analysis_service(
     SAST analyzers: always all enabled ones from config.
     LLM analyzers: filtered by user selection if provided.
     Which analyzers actually RUN is decided by the orchestrator
-    based on run_llm flag.
+    based on selected_llms list.
     """
     sast_analyzers = _build_sast_analyzers()
     llm_analyzers = _build_llm_analyzers(selected_models=selected_llms)
