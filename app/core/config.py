@@ -10,7 +10,7 @@ LLM_AVAILABLE_MODELS: tuple[str, ...] = (
     "openrouter:qwen/qwen3-coder:free",
     "openrouter:openai/gpt-oss-20b:free",
     "openrouter:nvidia/nemotron-3-super-120b-a12b:free",
-    "google:gemini-3.5-flash"
+    "google_genai:gemini-3.5-flash"
 )
 
 @dataclass
@@ -83,7 +83,7 @@ class Settings(BaseSettings):
         """Return the API key for a given provider. Empty string if not set."""
         provider_keys = {
             "groq": self.GROQ_API_KEY,
-            "google": self.GOOGLE_API_KEY,
+            "google_genai": self.GOOGLE_API_KEY,
             "openrouter": self.OPENROUTER_API_KEY,
             "openai": self.OPENAI_API_KEY,
             "anthropic": self.ANTHROPIC_API_KEY,
