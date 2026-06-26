@@ -7,7 +7,6 @@ os.environ["DATABASE_URL"] = "sqlite:///./test.db"
 os.environ["ENVIRONMENT"] = "test"
 
 import pytest
-from fastapi import Depends
 from fastapi.testclient import TestClient
 from sqlmodel import Session, SQLModel, create_engine
 from sqlmodel.pool import StaticPool
