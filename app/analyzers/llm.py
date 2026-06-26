@@ -8,9 +8,9 @@ from langchain_core.messages import HumanMessage
 
 from app.models import Severity, AnalyzerType
 from app.core.logging import get_logger
-from app.core.config import settings
+from app.core.config import LLMConfig
 from app.analyzers.port import AnalysisResult, AnalyzerFinding
-from app.models import LLMProvider, AnalysisStatus
+from app.models import AnalysisStatus
 
 logger = get_logger(__name__)
 
@@ -33,17 +33,14 @@ class LLMAnalyzer:
 
     def __init__(
         self,
-        prompt_version: str = "v1",
-        provider: LLMProvider | None = None,
-        model: str | None = None,
-        api_key: str | None = None,
-        temperature: float | None = None
+        llm_config: LLMConfig
     ):  
-        self.prompt_version = prompt_version
-        self.provider = provider or settings.LLM_PROVIDER
-        self.model = model or settings.LLM_MODEL
-        self.temperature = temperature or settings.LLM_TEMPERATURE
-        self._api_key = api_key or settings.active_llm_key
+        self.prompt_version = llm_config.prompt_version
+        self.provider = llm_config.provider
+        self.model = llm_config.model
+        self.temperature = llm_config.temperature
+        self._api_key = llm_config.api_key
+        self.max_tokens = llm_config.max_tokens
 
         # Initialize LangChain LLM
         self._llm = init_chat_model(
@@ -51,7 +48,7 @@ class LLMAnalyzer:
             model_provider=self.provider.value,
             api_key=self._api_key,
             temperature=self.temperature,
-            max_tokens=4096
+            max_tokens=self.max_tokens
         )
 
         # Load prompt template
