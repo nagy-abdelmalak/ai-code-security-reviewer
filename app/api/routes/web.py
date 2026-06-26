@@ -151,7 +151,7 @@ async def submit_page(
             request, 
             token=True,
             llm_models = LLM_AVAILABLE_MODELS,
-            sast_analyzers = settings.get_sast_analyzers
+            sast_analyzers = settings.get_sast_analyzers()
         )
     )
 
