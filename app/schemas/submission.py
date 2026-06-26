@@ -6,6 +6,7 @@ class SubmissionRequest(BaseModel):
     code: str = Field(min_length=1, max_length=1_000_000) # 1MB max (ADR-007)
     language: str = "python"
     run_llm: bool = False
+    selected_llms: list[str] = []
     explanation_enabled: bool = False
 
 class FindingResponse(BaseModel):
