@@ -14,6 +14,7 @@ from contextlib import asynccontextmanager
 import structlog
 from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import JSONResponse
 from sqlmodel import Session, select
 
 from app.api.routes import admin, auth, export, reviews, submissions, web
@@ -129,6 +130,15 @@ async def add_request_id(request: Request, call_next):
         status_code=response.status_code,
     )
     return response
+
+# --- Exception handler ---
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    logger.exception("unhandled_exception", path=request.url.path, error=str(exc))
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "An unexpected error occurred. Please try again."},
+    )
 
 # --- Health / Root ---
 @app.get("/health", tags=["system"])

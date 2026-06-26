@@ -48,9 +48,14 @@ async def submit_code_for_analysis(
         return SubmissionResponse.from_orm(submission, analyses_with_findings)
     
     except Exception as e:
+        logger.exception(
+            "submission_pipeline_error",
+            error=str(e),
+            user_id=str(user.id),
+        )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"An error occured while analyzing your submission: {str(e)}"
+            detail="Analysis failed. Please try again or contact support.",
         )
     
 @router.get("/")

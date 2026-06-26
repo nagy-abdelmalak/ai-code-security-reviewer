@@ -190,10 +190,17 @@ async def submit_code(
             status_code=303,
         )
     except Exception as e:
-        logger.exception("web_submit_error")
+        logger.exception("web_submit_error", error=str(e))
         return templates.TemplateResponse(
             request, "submit.html",
-            {"request": request, "token": True, "error": str(e), "code": code},
+            context=_base_context(
+                request,
+                token=True,
+                error="Something went wrong during analysis. Please try again.",
+                code=code,
+                llm_models=settings.LLM_AVAILABLE_MODELS,
+                sast_analyzers=settings.get_sast_analyzers(),
+            ),
         )
 
 @router.get("/results/{submission_id}", response_class=HTMLResponse)
