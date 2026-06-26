@@ -3,14 +3,15 @@ from uuid import UUID, uuid4
 from enum import Enum
 from sqlmodel import SQLModel, Field
 
-class LLMProvider(str, Enum):
-    GROQ = "groq"
-    OPENAI = "openai"
-    ANTHROPIC = "anthropic"
-    GEMINI = "gemini"
+# class LLMProvider(str, Enum):
+#     GROQ = "groq"
+#     OPENAI = "openai"
+#     ANTHROPIC = "anthropic"
+#     GEMINI = "gemini"
 
 class AnalyzerType(str, Enum):
     SEMGREP = "semgrep"
+    BANDIT = "bandit"
     LLM = "llm"
 
 class AnalysisStatus(str, Enum):
