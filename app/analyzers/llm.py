@@ -45,7 +45,7 @@ class LLMAnalyzer:
         # Initialize LangChain LLM
         self._llm = init_chat_model(
             model=self.model,
-            model_provider=self.provider.value,
+            model_provider=self.provider,
             api_key=self._api_key,
             temperature=self.temperature,
             max_tokens=self.max_tokens
