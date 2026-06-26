@@ -42,138 +42,155 @@ class AnalysisOrchestrator:
             run_llm: bool,
             explanation_enabled: bool
     ) -> list[Analysis]:
-        """Executes all valid analyzers concurrently to save time"""
-        tasks=[]
-        for analyzer in self.analyzers:
-            if analyzer.type == AnalyzerType.LLM and not run_llm:
-                continue
-            
-            # schedule the task for parallel execution
-            tasks.append(
-                self._run_analyzer(
-                    submission=submission,
-                    analyzer=analyzer,
-                    explanation_enabled=explanation_enabled
-                )
+        """
+        Orchestrates the full analysis pipeline in three sequential phases:
+        1. Initialize — create Analysis records in DB (sequential, FK-safe)
+        2. Execute    — run analyzers in parallel (pure I/O, no DB)
+        3. Persist    — save findings to DB (sequential, FK-safe)
+        """
+        # Filter which analyzers to run this time
+        active = self._select_analyzers(run_llm)
+        if not active:
+            return []
+
+        # Phase 1: DB writes first — guarantee analysis.id exists before findings
+        analysis_records = self._initialize_analyses(submission, active, explanation_enabled)
+
+        # Phase 2: parallel I/O — safe because zero DB access inside analyzers
+        results = await self._execute_analyzers(
+            analysis_records, submission, explanation_enabled
+        )
+
+        # Phase 3: sequential DB writes — FK always satisfied
+        return self._persist_results(analysis_records, results, explanation_enabled)
+    
+    def _initialize_analyses(
+        self,
+        submission: Submission,
+        analyzers: list[Analyzer],
+        explanation_enabled: bool,
+    ) -> list[tuple[Analyzer, Analysis]]:
+        """
+        Create one Analysis record per analyzer, flushed sequentially.
+        Sequential flush guarantees each analysis.id exists in the DB
+        before the parallel phase runs and before findings try to reference it.
+        """
+        records = []
+        for analyzer in analyzers:
+            analysis = Analysis(
+                submission_id=submission.id,
+                analyzer_type=analyzer.type,
+                status=AnalysisStatus.RUNNING,
+                explanation_enabled=explanation_enabled,
+                started_at=datetime.now(timezone.utc),
             )
+            
+            if analyzer.type == AnalyzerType.SEMGREP:
+                analysis.ruleset_version = settings.SEMGREP_RULESET
+            elif analyzer.type == AnalyzerType.BANDIT:
+                analysis.ruleset_version = analyzer.version
+            elif analyzer.type == AnalyzerType.LLM:
+                analysis.prompt_version = analyzer.version
+                analysis.ruleset_version = f"{analyzer.provider}:{analyzer.model}"
+
+            self.session.add(analysis)
+            self.session.flush()
 
             logger.info(
-                f"{analyzer.name}_task_added",
-                type=analyzer.type,
-                version=analyzer.version
+                "analysis_initialized",
+                analysis_id=str(analysis.id),
+                analyzer=analyzer.name,
             )
+            records.append((analyzer, analysis))
 
-        # Fire all analyzer executions together
-        return await asyncio.gather(*tasks)
+        return records
     
-    async def _run_analyzer(
-            self,
-            submission: Submission,
-            analyzer: Analyzer,
-            explanation_enabled: bool
-    ) -> Analysis:
-        """Executes a single analyzer within an isolated operational tracking block"""
-
-        # 1. Initialize tracking record with RUNNING status
-        analysis = Analysis(
-            submission_id=submission.id,
-            analyzer_type=analyzer.type,
-            status=AnalysisStatus.RUNNING,
-            explanation_enabled=explanation_enabled,
-            started_at=datetime.now(timezone.utc)
-        )
-        if analyzer.type == AnalyzerType.SEMGREP:
-            analysis.ruleset_version = settings.SEMGREP_RULESET
-        elif analyzer.type == AnalyzerType.LLM:
-            analysis.prompt_version = analyzer.version
-        
-        self.session.add(analysis)
-        self.session.flush()
-
+    async def _execute_analyzers(
+        self,
+        records: list[tuple[Analyzer, Analysis]],
+        submission: Submission,
+        explanation_enabled: bool,
+    ) -> list[AnalysisResult]:
+        """
+        Run all analyzers concurrently via asyncio.gather.
+        Safe because analyze() is pure I/O — subprocess or HTTP call.
+        No DB access inside this phase.
+        """
         logger.info(
-            "analysis_started",
-            analysis_id=str(analysis.id),
-            analyzer=analyzer.name,
+            "pipeline_executing",
+            submission_id=str(submission.id),
+            analyzers=[a.name for a, _ in records],
         )
 
-        try:
-            # 2. Fire the async port operation safely
-            # Match the signature constraints for LLM or SEMGREP
-            if analyzer.type == AnalyzerType.LLM:
-                result: AnalysisResult = await analyzer.analyze(
-                    code=submission.code,
-                    language=submission.language,
-                    explanation_enabled=explanation_enabled
-                )
-            else:
-                result: AnalysisResult = await analyzer.analyze(
-                    code = submission.code,
-                    language=submission.language,
-                    explanation_enabled=False
-                )
-            
-            # 3. Process Execution Timelines
+        return await asyncio.gather(*[
+            analyzer.analyze(
+                code=submission.code,
+                language=submission.language,
+                explanation_enabled=explanation_enabled,
+            )
+            for analyzer, _ in records
+        ])
+
+    def _persist_results(
+        self,
+        records: list[tuple[Analyzer, Analysis]],
+        results: list[AnalysisResult],
+        explanation_enabled: bool,
+    ) -> list[Analysis]:
+        """
+        Save analyzer results to DB sequentially.
+        Sequential flush after each analyzer ensures FK integrity.
+        """
+        completed = []
+        for (analyzer, analysis), result in zip(records, results):
             analysis.completed_at = datetime.now(timezone.utc)
 
-            # Check mapping status according to ADR-003
             if result.status == AnalysisStatus.COMPLETED:
+                self._persist_findings(analysis, result, explanation_enabled)
                 analysis.status = AnalysisStatus.COMPLETED
-
-                # Append structural database elements safely
-                for f in result.findings:
-                    finding = Finding(
-                        analysis_id=analysis.id,
-                        severity=f.severity,
-                        line_number=f.line_number,
-                        rule_id=f.rule_id,
-                        message=f.message,
-                        explanation=f.explanation if explanation_enabled else None
-                    )
-                    self.session.add(finding)
-                
                 logger.info(
                     "analysis_completed",
                     analysis_id=str(analysis.id),
+                    analyzer=analyzer.name,
                     findings_count=len(result.findings),
                     duration_ms=result.duration_ms,
                 )
-                
             else:
-                # Captures both FAILED and ERROR processing states
                 analysis.status = result.status
                 analysis.error_message = result.error_message
-
-                # Process partial findings if it was a FAILED state (as discussed in Scenario A)
-                if result.findings:
-                    for f in result.findings:
-                        finding = Finding(
-                            analysis_id=analysis.id,
-                            severity=f.severity,
-                            line_number=f.line_number,
-                            rule_id=f.rule_id,
-                            message=f.message,
-                            explanation=f.explanation if explanation_enabled else None,
-                        )
-                        self.session.add(finding)
-
                 logger.warning(
-                    "analysis_execution_issue",
+                    "analysis_failed",
                     analysis_id=str(analysis.id),
-                    status=result.status,
+                    analyzer=analyzer.name,
                     error=result.error_message,
+                    duration_ms=result.duration_ms,
                 )
 
-            # Flush changes for this individual task to the DB staging area
-            self.session.flush()
-            return analysis
+            self.session.flush()  # persist this analysis + its findings
+            completed.append(analysis)
 
-        except Exception as e:
-            # Absolute boundary shield block: prevents a total code crash from breaking 
-            # parallel concurrent sister execution threads.
-            analysis.completed_at = datetime.now(timezone.utc)
-            analysis.status = AnalysisStatus.ERROR
-            analysis.error_message = f"Unexpected runtime orchestrator failure: {str(e)}"
-            logger.exception("analysis_orchestration_system_crash", analysis_id=str(analysis.id))
+        return completed
+
+    def _persist_findings(
+        self,
+        analysis: Analysis,
+        result: AnalysisResult,
+        explanation_enabled: bool,
+    ) -> None:
+        """
+        Insert Finding records for a completed analysis.
+        Called only from _persist_results — analysis.id is guaranteed to exist.
+        """
+        for f in result.findings:
+            finding = Finding(
+                analysis_id=analysis.id,
+                severity=f.severity,
+                line_number=f.line_number,
+                rule_id=f.rule_id,
+                message=f.message,
+                explanation=f.explanation if explanation_enabled else None,
+            )
+            self.session.add(finding)
 
 class AnalysisService:
     def __init__(
