@@ -69,7 +69,7 @@ def _build_llm_analyzers(selected_models: list[str] | None = None) -> list[Analy
         models = [m for m in selected_models if m in available_models]
 
     analyzers = []
-    for model in available_models:
+    for model in models:
         config = settings.get_llm_config(model)
         if not config.api_key:
             logger.warning(
