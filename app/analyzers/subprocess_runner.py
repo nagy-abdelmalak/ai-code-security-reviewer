@@ -21,7 +21,7 @@ async def safe_subprocess(process: asyncio.subprocess.Process):
 async def run_subprocess(
     args: list[str],
     tool_name: str,
-    timeout: int = settings.TIMEOT_SECONDS,
+    timeout: int = settings.TIMEOUT_SECONDS,
     success_exit_codes: tuple[int, ...] = (0, 1),
 ) -> tuple[str, str, int] | None:
     """

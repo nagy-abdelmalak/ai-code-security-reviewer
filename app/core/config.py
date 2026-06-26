@@ -7,10 +7,10 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 @dataclass
 class LLMConfig:
    """Class to hold specific LLM configurations"""
-   prompt_version: str = "v1"
    provider: str
    model: str
    api_key: str
+   prompt_version: str = "v1"
    temperature: float = 0.0  # For highly deterministic LLMs
    max_tokens: int = 4096
 
@@ -51,6 +51,7 @@ class Settings(BaseSettings):
     LOG_TO_FILE: bool = False
 
     # --- SAST ---
+    TIMEOUT_SECONDS: int = 30.0
     ENABLED_SAST_ANALYZERS: str = "semgrep,bandit"
     SEMGREP_RULESET: str = "auto"  #"p/security-audit,p/python"
     BANDIT_SEVERITY: str = "medium"
@@ -61,12 +62,12 @@ class Settings(BaseSettings):
     Comma-separated "provider:model" pairs.
     These appear in the UI dropdown and are selectable by the user.
     """
-    LLM_AVAILABLE_MODELS: str = (
-        "groq:qwen/qwen3.6-27b" ","
-        "groq:llama-3.3-70b-versatile" ","
-        "openrouter:qwen/qwen3-coder:free" ","
-        "openrouter:openai/gpt-oss-20b:free" ","
-        "openrouter:nvidia/nemotron-3-super-120b-a12b:free" ","
+    LLM_AVAILABLE_MODELS: tuple[str] = (
+        "groq:qwen/qwen3.6-27b",
+        "groq:llama-3.3-70b-versatile",
+        "openrouter:qwen/qwen3-coder:free",
+        "openrouter:openai/gpt-oss-20b:free",
+        "openrouter:nvidia/nemotron-3-super-120b-a12b:free",
         "google:gemini-3.5-flash"
     )
 
@@ -115,17 +116,6 @@ class Settings(BaseSettings):
             api_key=api_key,
             temperature=self.LLM_TEMPERATURE,
         )
-
-    def get_available_models(self) -> list[str]:
-        """
-        Return all available models to populate the UI dropdown.
-        """
-        models = []
-        for model in self.LLM_AVAILABLE_MODELS.split(","):
-            model = model.strip()
-            if model:
-                models.append(model)
-        return models
 
     def get_sast_analyzers(self) -> list[str]:
         return [a.strip().lower() for a in self.ENABLED_SAST_ANALYZERS.split(",") if a.strip()]
