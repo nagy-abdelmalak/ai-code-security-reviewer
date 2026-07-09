@@ -177,14 +177,18 @@
     });
     
     // --- Loading state ---
-    document.getElementById('submit-form').addEventListener('submit', function() {
+    document.getElementById('submit-form').addEventListener('submit', function(e) {
         const btn = document.getElementById('analyze-btn');
         const loading = document.getElementById('loading');
         const status = document.getElementById('loading-status');
-        const isLLM = document.getElementById('run_llm').checked;
+        const isLLM = document.getElementById('run_llm_toggle').checked; // ← fixed name
 
-        btn.disabled = true;
-        btn.textContent = 'Analyzing...';
+        // Disable AFTER browser has already serialized the form
+        setTimeout(function() {
+            btn.disabled = true;
+            btn.textContent = 'Analyzing...';
+        }, 0);
+
         loading.style.display = 'block';
 
         const messages = isLLM
