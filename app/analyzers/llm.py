@@ -98,7 +98,14 @@ class LLMAnalyzer:
             ])
 
             elapsed = int((time.monotonic() - start) * 1000)
-            raw_text = response.content.strip()
+            raw_text = (
+                response.content
+                if isinstance(response.content, str)
+                else "".join(
+                    block.get("text", "") if isinstance(block, dict) else str(block)
+                    for block in response.content
+                )
+            ).strip()
 
             # Parse response
             findings = self._parse_response(raw_text, explanation_enabled)
