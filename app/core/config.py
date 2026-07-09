@@ -10,7 +10,7 @@ LLM_AVAILABLE_MODELS: tuple[str, ...] = (
     "openrouter:qwen/qwen3-coder:free",
     "openrouter:openai/gpt-oss-20b:free",
     "openrouter:nvidia/nemotron-3-super-120b-a12b:free",
-    "google_genai:gemini-3.5-flash"
+    # "google_genai:gemini-3.5-flash"
 )
 
 @dataclass
@@ -66,13 +66,9 @@ class Settings(BaseSettings):
     BANDIT_SEVERITY: str = "medium"
     BANDIT_CONFIDENCE: str = "medium"
 
-    # --- LLM Available Models ---
-    """
-    Comma-separated "provider:model" pairs.
-    These appear in the UI dropdown and are selectable by the user.
-    """
+    # --- LLM ---
+    LLM_PROMPT_VERSION: str = "v1"
 
-    # --- LLM API keys ---
     GROQ_API_KEY: str = ""
     GOOGLE_API_KEY: str = ""
     OPENROUTER_API_KEY: str = ""
@@ -109,7 +105,8 @@ class Settings(BaseSettings):
         return LLMConfig(
             provider=provider,
             model=model,
-            api_key=api_key
+            api_key=api_key,
+            prompt_version=self.LLM_PROMPT_VERSION
         )
 
     def get_sast_analyzers(self) -> list[str]:
