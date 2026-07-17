@@ -75,6 +75,11 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: str = ""
     ANTHROPIC_API_KEY: str = ""
 
+    # --- RAG ---
+    EMBEDDING_MODEL: str = "sentence-transformers/all-MiniLM-L6-v2"
+    RAG_TOP_K: int = 5
+    RAG_ENABLED: bool = True
+
     def get_api_key(self, provider: str) -> str:
         """Return the API key for a given provider. Empty string if not set."""
         provider_keys = {

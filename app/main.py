@@ -23,6 +23,7 @@ from app.core.logging import configure_logging, get_logger
 from app.core.security import hash_password
 from app.db.session import engine, init_db
 from app.models.user import Role, User
+from app.rag.setup import ensure_pgvector
 
 # --- Logging ---
 configure_logging()
@@ -51,6 +52,7 @@ def _bootstrap_admin() -> None:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("starting_up")
+    ensure_pgvector(engine)
     init_db()
     logger.info("database_initialized")
     _bootstrap_admin()

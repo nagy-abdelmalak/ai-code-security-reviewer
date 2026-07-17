@@ -5,6 +5,7 @@ from app.models.finding import FindingStatus, Finding, Severity
 from app.models.submission import Submission
 from app.models.analysis import Analysis, AnalysisStatus, AnalyzerType #LLMProvider
 from app.models.review import Review
+from app.models.knowledge_chunk import KnowledgeChunk
 
 __all__ = [
     "Role",
@@ -20,5 +21,6 @@ __all__ = [
     "AnalysisStatus",
     "AnalyzerType",
     # "LLMProvider",
-    "Review"
+    "Review",
+    "KnowledgeChunk"
 ]
