@@ -24,30 +24,6 @@ class RetrievedChunk:
 
 @runtime_checkable
 class Embedder(Protocol):
-    """
-    Turns text into vectors.
-
-    Two methods on purpose: many embedding models are trained asymmetrically
-    (documents vs. queries get slightly different treatment). Even when they
-    are symmetric, having both makes call sites read clearly and lets us swap
-    in an asymmetric model later with no changes upstream.
-    """
-
-    @property
-    def dim(self) -> int:
-        """Vector dimension. MUST equal constants.EMBEDDING_DIM."""
-        ...
-
-    def embed_documents(self, texts: Sequence[str]) -> list[list[float]]:
-        """Embed a batch of documents (ingestion path)."""
-        ...
-
-    def embed_query(self, text: str) -> list[float]:
-        """Embed a single query (retrieval path)."""
-        ...
-
-@runtime_checkable
-class Embedder(Protocol):
     """Turns text into vectors
     
     2 methods on purpose to cover symmetric and unsymmetric models
