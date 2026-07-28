@@ -21,7 +21,7 @@ class SentenceTransformerEmbedder:
     Implements app.rag.port.Embedder
     """
     def __init__(self, model_name: str = DEFAULT_EMBEDDING_MODEL) -> None:
-        logger.info("embdder_loading", model=model_name)
+        logger.info("embedder_loading", model=model_name)
         self._model = SentenceTransformer(model_name)
         self._dim = self._model.get_embedding_dimension()
 
@@ -41,7 +41,7 @@ class SentenceTransformerEmbedder:
     def embed_documents(self, texts) -> list[list[float]]:
         vectors = self._model.encode(
             list(texts),
-            normalize_embaddings=True,
+            normalize_embeddings=True,
             show_progress_bar=False
         )
         return [v.tolist() for v in vectors]
