@@ -16,3 +16,12 @@ def ensure_pgvector(engine: Engine) -> None:
     with engine.begin() as conn:
         conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
     logger.info("pgvector_extension_ready")
+
+def create_vector_index(engine: Engine) -> None:
+    """HNSW index for cosine similarity. Run AFTER the corpus is loaded"""
+    with engine.begin() as conn:
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS knowledge_chunk_embedding_hnsw " \
+            "ON knowledge_chunk USING hnsw (embedding vector_cosine_ops)"
+        ))
+    logger.info("vector_index_ready", kind="hnsw", ops="vector_cosine_ops")

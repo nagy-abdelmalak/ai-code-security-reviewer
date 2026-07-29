@@ -15,7 +15,7 @@ from app.rag.chunker import Section, chunk_document
 from app.rag.port import Chunk, Embedder
 from app.rag.embedder import SentenceTransformerEmbedder
 from app.rag.constants import SOURCE_CWE
-from app.rag.setup import ensure_pgvector
+from app.rag.setup import ensure_pgvector, create_vector_index
 from app.models import KnowledgeChunk
 from app.db.session import engine
 
@@ -151,6 +151,8 @@ def main() -> None:
             logger.exception("ingestation_failed")
 
             raise
+
+    create_vector_index(engine)
         
     elapsed = int((time.monotonic() - start) * 1000)
 
@@ -160,7 +162,6 @@ def main() -> None:
         chunks=total,
         duration_ms=elapsed,
     )
-
 
 if __name__ == "__main__":
     main()
