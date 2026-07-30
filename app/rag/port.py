@@ -22,6 +22,13 @@ class RetrievedChunk:
     chunk: Chunk
     score: float
 
+@dataclass(frozen=True)
+class Citation:
+    source_id: str
+    title: str
+    url: str
+    score: float
+
 @runtime_checkable
 class Embedder(Protocol):
     """Turns text into vectors

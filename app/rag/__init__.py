@@ -4,7 +4,8 @@ from app.rag.port import (
     Chunk,
     RetrievedChunk,
     Embedder,
-    KnowledgeRetriever
+    KnowledgeRetriever,
+    Citation
 )
 from app.rag.embedder import SentenceTransformerEmbedder
 from app.rag.chunker import Section, chunk_document
@@ -16,5 +17,6 @@ __all__ = [
     "KnowledgeRetriever",
     "SentenceTransformerEmbedder",
     "Section",
-    "chunk_document"
+    "chunk_document",
+    "Citation"
 ]
