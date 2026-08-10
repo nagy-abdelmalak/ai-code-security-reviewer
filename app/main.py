@@ -24,6 +24,7 @@ from app.core.security import hash_password
 from app.db.session import engine, init_db
 from app.models.user import Role, User
 from app.rag.setup import ensure_pgvector
+from app.rag.embedder import SentenceTransformerEmbedder
 
 # --- Logging ---
 configure_logging()
@@ -57,6 +58,8 @@ async def lifespan(app: FastAPI):
     logger.info("database_initialized")
     _bootstrap_admin()
     logger.info("bootstrap_complete")
+    app.state.embedder = SentenceTransformerEmbedder()
+    logger.info("embedder_loaded")
     yield
     logger.info("shutting_down")
 

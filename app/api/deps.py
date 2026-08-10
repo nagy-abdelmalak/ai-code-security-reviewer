@@ -1,5 +1,5 @@
 from uuid import UUID
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordBearer
 from jwt.exceptions import PyJWTError
 from sqlmodel import Session
@@ -15,6 +15,9 @@ from app.services.analysis_service import (
     AnalysisService
 )
 from app.analyzers import SemgrepAnalyzer, LLMAnalyzer, Analyzer, BanditAnalyzer
+from app.rag.port import Embedder
+from app.rag.store import PgVectorKnowledgeStore
+from app.services.grounding_service import GroundingService
 
 logger = get_logger(__name__)
 
@@ -174,3 +177,13 @@ def get_analysis_service(
         orchestrator=orchestrator,
         session=session
     )
+
+def get_embedder(request: Request) -> Embedder:
+    return request.app.state.embedder
+
+def get_grounding_service(
+    session: Session = Depends(get_session),
+    embedder: Embedder = Depends(get_embedder)
+) -> GroundingService:
+    store = PgVectorKnowledgeStore(session, embedder)
+    return GroundingService
