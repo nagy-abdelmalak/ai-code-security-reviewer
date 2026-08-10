@@ -1,5 +1,5 @@
 from app.rag import KnowledgeRetriever, Citation
-from app.models import Finding
+from app.models import Finding, Severity
 
 class GroundingService:
     def __init__(self, retriever: KnowledgeRetriever):
@@ -27,3 +27,21 @@ class GroundingService:
 
         return citations
 
+if __name__ == "__main__":
+    from app.db.session import engine
+    from app.rag.embedder import SentenceTransformerEmbedder
+    from app.rag.store import PgVectorKnowledgeStore
+    from sqlmodel import Session
+    from uuid import uuid4
+    from app.models import Finding, Severity
+
+    with Session(engine) as session:
+        store = PgVectorKnowledgeStore(session, SentenceTransformerEmbedder())
+        svc = GroundingService(store)
+        finding = Finding(
+            analysis_id=uuid4(), severity=Severity.HIGH, line_number=12,
+            rule_id="py-sql-concat",
+            message="user input concatenated directly into SQL query",
+        )
+        for c in svc.ground_finding(finding, top_k=3):
+            print(f"{c.score:.3f}  {c.source_id}  {c.title}")
