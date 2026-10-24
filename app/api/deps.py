@@ -186,4 +186,4 @@ def get_grounding_service(
     embedder: Embedder = Depends(get_embedder)
 ) -> GroundingService:
     store = PgVectorKnowledgeStore(session, embedder)
-    return GroundingService
+    return GroundingService(store)
