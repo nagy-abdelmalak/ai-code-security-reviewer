@@ -25,7 +25,7 @@ class GroundingService:
                 )
             )
 
-        return citations
+        return citations[:top_k]    # at most top_k DISTINCT sources
 
 if __name__ == "__main__":
     from app.db.session import engine
