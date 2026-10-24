@@ -5,10 +5,11 @@ from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 LLM_AVAILABLE_MODELS: tuple[str, ...] = (
-    "groq:qwen/qwen3.6-27b",
-    "groq:llama-3.3-70b-versatile",
-    "openrouter:qwen/qwen3-coder:free",
-    "openrouter:openai/gpt-oss-20b:free",
+    "groq:qwen/qwen3.8-27b",
+    "groq:openai/gpt-oss-120b",
+    "groq:meta-llama/llama-prompt-guard-2-86m",
+    "openrouter:cohere/north-mini-code:free",
+    "openrouter:google/gemma-4-26b-a4b-it:free",
     "openrouter:nvidia/nemotron-3-super-120b-a12b:free",
     # "google_genai:gemini-3.5-flash"
 )
