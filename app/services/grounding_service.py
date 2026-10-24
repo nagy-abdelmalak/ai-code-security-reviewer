@@ -6,7 +6,9 @@ class GroundingService:
         self.retriever = retriever
 
     def ground_finding(self, finding: Finding, top_k: int = 3) -> list[Citation]:
-        query = finding.message
+        return self.ground_message(self, finding.message, top_k)
+
+    def ground_message(self, query: str, top_k: int) -> list[Citation]:
         results = self.retriever.retrieve(query=query, top_k=top_k * 4)
 
         seen: set[str] = set()
