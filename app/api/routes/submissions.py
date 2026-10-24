@@ -5,11 +5,19 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session, select
 
 from app.core.logging import get_logger
+from app.core.config import settings
 from app.schemas.submission import SubmissionRequest, SubmissionResponse
-from app.api.deps import require_role, get_analysis_service, get_session
+from app.api.deps import (
+    require_role, 
+    get_analysis_service, 
+    get_session,
+    get_grounding_service
+)
 from app.services.analysis_service import AnalysisService
-from app.models import Role, User, Submission, Analysis
-from app.models import Finding
+from app.services.grounding_service import GroundingService
+from app.models import Role, User, Submission, Analysis, Finding
+from app.rag import Citation
+
 
 router = APIRouter(prefix="/submissions", tags=["submissions"])
 logger = get_logger(__name__)
@@ -22,7 +30,8 @@ logger = get_logger(__name__)
 async def submit_code_for_analysis(
     req: SubmissionRequest, 
     user: User = Depends(require_role(Role.DEVELOPER)),
-    session: Session = Depends(get_session)
+    session: Session = Depends(get_session),
+    grounding: GroundingService = Depends(get_grounding_service)
 ):
     """
     Submit code for analysis. Developer only
@@ -44,7 +53,17 @@ async def submit_code_for_analysis(
             for a in analyses
         ]
 
-        return SubmissionResponse.from_orm(submission, analyses_with_findings)
+        citations_by_finding: dict[str, list[Citation]] = {}
+        if settings.RAG_ENABLED:
+            for _,findings in analyses_with_findings:
+                for f in findings:
+                    try:
+                        citations_by_finding[str(f.id)] = grounding.ground_finding(f)
+                    except:
+                        logger.warning("grounding_failed", finding_id=str(f.id))
+                        citations_by_finding[str(f.id)] = []
+
+        return SubmissionResponse.from_orm(submission, analyses_with_findings, citations_by_finding)
     
     except Exception as e:
         logger.exception(
