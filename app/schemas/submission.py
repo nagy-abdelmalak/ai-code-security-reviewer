@@ -8,6 +8,12 @@ class SubmissionRequest(BaseModel):
     selected_llms: list[str] = []
     explanation_enabled: bool = False
 
+class CitationResponse(BaseModel):
+    source_id: str
+    title: str
+    url: str
+    score: float
+
 class FindingResponse(BaseModel):
     id: str
     severity: str
@@ -16,6 +22,7 @@ class FindingResponse(BaseModel):
     message: str
     explanation: str | None = None
     status: str
+    citations: list[CitationResponse] = []
 
 class AnalysisResponse(BaseModel):
     id: str
@@ -27,7 +34,7 @@ class AnalysisResponse(BaseModel):
     duration_ms: int | None = None
 
     @classmethod
-    def from_orm(cls, analysis, findings) -> Self:
+    def from_orm(cls, analysis, findings, citations_by_finding) -> Self:
         return cls(
             id=str(analysis.id),
             analyzer_type=analysis.analyzer_type.value,
@@ -48,6 +55,15 @@ class AnalysisResponse(BaseModel):
                     message=f.message,
                     explanation=f.explanation,
                     status=f.status.value,
+                    citations=[
+                        CitationResponse(
+                            source_id=c.source_id,
+                            title=c.title,
+                            url=c.url,
+                            score=c.score
+                        )
+                        for c in citations_by_finding.get(str(f.id), [])
+                    ]
                 )
                 for f in findings
             ],
@@ -61,7 +77,12 @@ class SubmissionResponse(BaseModel):
     analyses: list[AnalysisResponse]
 
     @classmethod
-    def from_orm(cls, submission, analyses_with_findings: list[tuple]) -> Self:
+    def from_orm(
+        cls, 
+        submission, 
+        analyses_with_findings,
+        citations_by_finding
+    ) -> Self:
         """
         Build response from domain objects.
         analyses_with_findings: list of (Analysis, list[Finding]) tuples.
@@ -72,7 +93,7 @@ class SubmissionResponse(BaseModel):
             source_mode=submission.source_mode,
             created_at=submission.created_at.isoformat(),
             analyses=[
-                AnalysisResponse.from_orm(analysis, findings)
+                AnalysisResponse.from_orm(analysis, findings, citations_by_finding)
                 for analysis, findings in analyses_with_findings
             ],
         )
