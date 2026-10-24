@@ -9,7 +9,7 @@ from app.rag.embedder import SentenceTransformerEmbedder
 class PgVectorKnowledgeStore:
     """Implements app.rag.port.knowledgeRetriver over pgvector"""
 
-    def __init__(self, session: Session, embedder: Embedder):
+    def __init__(self, session: Session, embedder: Embedder = SentenceTransformerEmbedder()):
         self.session = session
         self.embedder = embedder
 
