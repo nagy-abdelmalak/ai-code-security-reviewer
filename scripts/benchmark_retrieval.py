@@ -27,8 +27,8 @@ def rag_grade(data_file: Path):
     with Session(engine) as session:
         svc = GroundingService(PgVectorKnowledgeStore(session, embedder))
 
-        pos_scores = []
-        neg_scores = []
+        hit1_scores = []
+        silenced = 0
 
         for q in positives:
             cited = svc.ground_message(q["query"], top_k=3)
@@ -37,7 +37,7 @@ def rag_grade(data_file: Path):
             hit1 += first_ok
             hit3 += in_top3
             if first_ok:
-                pos_scores.append(cited[0].score)
+                hit1_scores.append(cited[0].score)
             else:
                 label = "2nd/3rd" if in_top3 else "MISS"
                 print(f"{label:8} {q["query"][:60]!r} -> expected {q["expected"]}, got {cited}")
@@ -46,8 +46,9 @@ def rag_grade(data_file: Path):
         for q in negatives:
             cited = svc.ground_message(q["query"], top_k=1)
             if cited:
-                neg_scores.append(cited[0].score)
                 print(f"  cited {cited[0].source_id} (score {cited[0].score:.3f})  <- {q['query'][:50]!r}")
+            else:
+                silenced += 1 
 
     n = len(positives)
     print("\nRAG EVALUATION")
@@ -56,8 +57,7 @@ def rag_grade(data_file: Path):
 
     print("\nCUT-OFF OPTIONS")
     for t in [0.25, 0.30, 0.35, 0.40, 0.45, 0.50]:
-        kept = sum(s >= t for s in pos_scores)
-        silenced = sum(s < t for s in neg_scores)
+        kept = sum(s >= t for s in hit1_scores)
         print(f"  cut-off {t:.2f}: correct answers kept {kept}/{len(positives)} | "
             f"no-answer questions silenced {silenced}/{len(negatives)}")
 

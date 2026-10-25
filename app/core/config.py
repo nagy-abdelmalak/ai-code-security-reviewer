@@ -80,6 +80,7 @@ class Settings(BaseSettings):
     EMBEDDING_MODEL: str = "sentence-transformers/all-MiniLM-L6-v2"
     RAG_TOP_K: int = 5
     RAG_ENABLED: bool = True
+    RAG_MIN_SCORE: float = 0.35
 
     def get_api_key(self, provider: str) -> str:
         """Return the API key for a given provider. Empty string if not set."""

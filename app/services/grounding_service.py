@@ -1,5 +1,6 @@
 from app.rag import KnowledgeRetriever, Citation
 from app.models import Finding, Severity
+from app.core.config import settings
 
 class GroundingService:
     def __init__(self, retriever: KnowledgeRetriever):
@@ -15,7 +16,7 @@ class GroundingService:
         citations: list[Citation] = []
         for r in results:
             s_id = r.chunk.source_id
-            if s_id in seen:
+            if s_id in seen or r.score < settings.RAG_MIN_SCORE:
                 continue
             seen.add(s_id)
             citations.append(
