@@ -59,8 +59,12 @@ async def submit_code_for_analysis(
                 for f in findings:
                     try:
                         citations_by_finding[str(f.id)] = grounding.ground_finding(f)
-                    except:
-                        logger.warning("grounding_failed", finding_id=str(f.id))
+                    except Exception as e:
+                        logger.warning(
+                            "grounding_failed", 
+                            finding_id=str(f.id), 
+                            error=str(e)
+                        )
                         citations_by_finding[str(f.id)] = []
 
         return SubmissionResponse.from_orm(submission, analyses_with_findings, citations_by_finding)
@@ -68,8 +72,8 @@ async def submit_code_for_analysis(
     except Exception as e:
         logger.exception(
             "submission_pipeline_error",
-            error=str(e),
             user_id=str(user.id),
+            error=str(e)
         )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
